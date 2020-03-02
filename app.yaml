@@ -1,0 +1,9 @@
+runtime: go112
+
+includes:
+  - secret.yaml
+
+handlers:
+  - url: /(.*)
+    script: auto
+    secure: always

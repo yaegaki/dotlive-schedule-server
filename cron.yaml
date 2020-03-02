@@ -1,0 +1,3 @@
+cron:
+- url: /_task/job
+  schedule: every 10 minutes synchronized
