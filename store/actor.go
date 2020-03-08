@@ -12,9 +12,11 @@ type actor struct {
 	// id 配信者ID
 	id string
 	// Name 名前
-	Name string
+	Name string `firestore:"name"`
 	// Hashtag ハッシュタグ
-	Hashtag string
+	Hashtag string `firestore:"hashTag"`
+	// Icon アイコンのURL
+	Icon string `firestore:"icon"`
 	// TwitterScreenName Twitterのスクリーンネーム
 	TwitterScreenName string `firestore:"twitterScreenName"`
 	// Emoji 推しアイコン
@@ -45,6 +47,7 @@ func FindActors(ctx context.Context, c *firestore.Client) ([]model.Actor, error)
 			ID:                a.id,
 			Name:              a.Name,
 			Hashtag:           a.Hashtag,
+			Icon:              a.Icon,
 			TwitterScreenName: a.TwitterScreenName,
 			Emoji:             a.Emoji,
 			YoutubeChannelID:  a.YoutubeChannelID,
@@ -62,6 +65,7 @@ func SaveActor(ctx context.Context, c *firestore.Client, a model.Actor) error {
 	_, err := c.Collection(collectionNameActor).Doc(a.ID).Set(ctx, actor{
 		Name:              a.Name,
 		Hashtag:           a.Hashtag,
+		Icon:              a.Icon,
 		TwitterScreenName: a.TwitterScreenName,
 		Emoji:             a.Emoji,
 		YoutubeChannelID:  a.YoutubeChannelID,

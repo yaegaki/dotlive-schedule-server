@@ -1,17 +1,20 @@
 package app
 
 import (
+	"context"
 	"encoding/json"
 	"log"
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 
 	"cloud.google.com/go/firestore"
 	"github.com/ChimeraCoder/anaconda"
 	"github.com/labstack/echo/v4"
 	"github.com/yaegaki/dotlive-schedule-server/common"
 	"github.com/yaegaki/dotlive-schedule-server/jst"
+	"github.com/yaegaki/dotlive-schedule-server/model"
 	"github.com/yaegaki/dotlive-schedule-server/store"
 	"github.com/yaegaki/dotlive-schedule-server/tweet"
 )
@@ -88,6 +91,11 @@ func jobHandler(c echo.Context) error {
 
 	api := anaconda.NewTwitterApi("", "")
 
+	// プロフィール画像更新
+	for _, a := range actors {
+		updateProfileImage(ctx, api, client, &a)
+	}
+
 	// ツイートから計画を取得する
 	newPlans, err := tweet.FindPlans(api, lastTweetID, actors)
 	if err != nil {
@@ -105,7 +113,31 @@ func jobHandler(c echo.Context) error {
 	tweet.ResolveVideos(api, actors, videoResolver)
 
 	// プッシュ通知
-	pushNotify(ctx, client)
+	pushNotify(ctx, client, actors)
 
 	return c.String(http.StatusOK, "done.")
+}
+
+func updateProfileImage(ctx context.Context, api *anaconda.TwitterApi, c *firestore.Client, actor *model.Actor) {
+	url, err := tweet.GetProfileImageURL(api, *actor)
+	if err != nil {
+		log.Printf("Can not get profile image for %v: %v", actor.Name, err)
+		return
+	}
+
+	url = strings.Replace(url, "_normal", "", 1)
+
+	if actor.Icon == url {
+		return
+	}
+
+	copy := *actor
+	copy.Icon = url
+	err = store.SaveActor(ctx, c, copy)
+	if err != nil {
+		log.Printf("Can not save actor %v: %v", actor.Name, err)
+		return
+	}
+
+	*actor = copy
 }

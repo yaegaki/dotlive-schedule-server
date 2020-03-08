@@ -5,24 +5,26 @@ import "github.com/yaegaki/dotlive-schedule-server/jst"
 // Schedule スケジュール
 type Schedule struct {
 	// Date 配信日
-	Date    jst.Time
-	Entries []ScheduleEntry
+	Date    jst.Time        `json:"date"`
+	Entries []ScheduleEntry `json:"entries"`
 }
 
 // ScheduleEntry スケジュールのエントリ
 type ScheduleEntry struct {
 	// ActorName 配信者名
-	ActorName string
+	ActorName string `json:"actorName"`
+	// Icon 配信者アイコン
+	Icon string `json:"icon"`
 	// StartAt 配信予定/予定時刻
-	StartAt jst.Time
+	StartAt jst.Time `json:"startAt"`
 	// VideoID 動画ID
-	VideoID string
+	VideoID string `json:"videoId"`
 	// URL 配信URL
-	URL string
+	URL string `json:"url"`
 	// Planned 計画配信かどうか
-	Planned bool
+	Planned bool `json:"planned"`
 	// IsLive 生放送かどうか
-	IsLive bool
+	IsLive bool `json:"isLive"`
 	// Text 説明
-	Text string
+	Text string `json:"text"`
 }

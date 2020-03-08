@@ -6,17 +6,31 @@ import (
 	"time"
 
 	"cloud.google.com/go/firestore"
+	firebase "firebase.google.com/go"
+	"firebase.google.com/go/messaging"
 	"github.com/yaegaki/dotlive-schedule-server/jst"
 	"github.com/yaegaki/dotlive-schedule-server/model"
+	"github.com/yaegaki/dotlive-schedule-server/notify"
 	"github.com/yaegaki/dotlive-schedule-server/store"
 )
 
-func pushNotify(ctx context.Context, c *firestore.Client) {
-	pushNotifyLatestPlan(ctx, c)
-	pushNotifyVideo(ctx, c)
+func pushNotify(ctx context.Context, c *firestore.Client, actors model.ActorSlice) {
+	app, err := firebase.NewApp(ctx, nil)
+	if err != nil {
+		log.Printf("Can not create firebase app: %v", err)
+		return
+	}
+	msgCli, err := app.Messaging(ctx)
+	if err != nil {
+		log.Printf("Can not create firebase messaging client: %v", err)
+		return
+	}
+
+	pushNotifyLatestPlan(ctx, c, msgCli, actors)
+	pushNotifyVideo(ctx, c, msgCli, actors)
 }
 
-func pushNotifyLatestPlan(ctx context.Context, c *firestore.Client) {
+func pushNotifyLatestPlan(ctx context.Context, c *firestore.Client, msgCli *messaging.Client, actors model.ActorSlice) {
 	plan, err := store.FindLatestPlan(ctx, c)
 	if err != nil {
 		log.Printf("Can not get latest plan: %v", err)
@@ -40,9 +54,14 @@ func pushNotifyLatestPlan(ctx context.Context, c *firestore.Client) {
 
 	// TODO: プッシュ通知を送る
 	log.Printf("push notify plan: %v", plan.Date)
+	err = notify.PushNotifyPlan(ctx, msgCli, plan, actors)
+	if err != nil {
+		log.Printf("Can not send push notification: %v", err)
+		return
+	}
 }
 
-func pushNotifyVideo(ctx context.Context, c *firestore.Client) {
+func pushNotifyVideo(ctx context.Context, c *firestore.Client, msgCli *messaging.Client, actors model.ActorSlice) {
 	now := jst.Now()
 	r := jst.Range{
 		Begin: now.AddDay(-2),
@@ -112,7 +131,18 @@ func pushNotifyVideo(ctx context.Context, c *firestore.Client) {
 			isPlanned = true
 		}
 
+		actor, err := actors.FindActor(v.ActorID)
+		if err != nil {
+			log.Printf("Unknown actor %v", actor.ID)
+			continue
+		}
+
 		// TODO: push通知
 		log.Printf("push notify video: %v, %v, %v, %v", v.ID, v.Text, isPlanned, v.IsLive)
+		err = notify.PushNotifyVideo(ctx, msgCli, v, actor)
+		if err != nil {
+			log.Printf("Can not send push notification: %v", err)
+			return
+		}
 	}
 }

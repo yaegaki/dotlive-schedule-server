@@ -4,6 +4,7 @@ go 1.12
 
 require (
 	cloud.google.com/go/firestore v1.1.1
+	firebase.google.com/go v3.12.0+incompatible
 	github.com/ChimeraCoder/anaconda v2.0.0+incompatible
 	github.com/ChimeraCoder/tokenbucket v0.0.0-20131201223612-c5a927568de7 // indirect
 	github.com/azr/backoff v0.0.0-20160115115103-53511d3c7330 // indirect

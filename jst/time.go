@@ -64,6 +64,16 @@ func (t Time) Day() int {
 	return t.t.Day()
 }
 
+// Hour 時
+func (t Time) Hour() int {
+	return t.t.Hour()
+}
+
+// Minute 分
+func (t Time) Minute() int {
+	return t.t.Minute()
+}
+
 // Equal 比較する
 func (t Time) Equal(other Time) bool {
 	return t.t.Equal(other.t)

@@ -129,6 +129,7 @@ func createScheduleInternal(date jst.Time, plans []model.Plan, videos []model.Vi
 
 		se := model.ScheduleEntry{
 			ActorName: actor.Name,
+			Icon:      actor.Icon,
 			StartAt:   startAt,
 			Planned:   isPlanned,
 			IsLive:    v.IsLive,
@@ -160,6 +161,7 @@ func createScheduleInternal(date jst.Time, plans []model.Plan, videos []model.Vi
 
 		se := model.ScheduleEntry{
 			ActorName: actor.Name,
+			Icon:      actor.Icon,
 			StartAt:   e.StartAt,
 			Planned:   true,
 		}
