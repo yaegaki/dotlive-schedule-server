@@ -81,8 +81,8 @@ func pushNotifyVideo(ctx context.Context, c *firestore.Client, msgCli *messaging
 		return
 	}
 
-	// 現在時間より20分前の場合は古いので通知しない
-	notifyLimit := now.Add(-20 * time.Minute)
+	// 現在時間より2時間前の場合は古いので通知しない
+	notifyLimit := now.Add(-2 * time.Hour)
 
 	for _, v := range videos {
 		isPlanned := false
