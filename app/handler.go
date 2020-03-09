@@ -8,6 +8,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
 	"cloud.google.com/go/firestore"
 	"github.com/ChimeraCoder/anaconda"
@@ -32,9 +33,14 @@ func Route(e *echo.Echo) {
 		now := jst.Now()
 		q := c.Request().URL.Query().Get("q")
 		if q != "" {
-			d, err := strconv.Atoi(q)
-			if err == nil {
-				now = now.AddDay(d)
+			xs := strings.Split(q, "-")
+			if len(xs) == 3 {
+				year, err1 := strconv.Atoi(xs[0])
+				month, err2 := strconv.Atoi(xs[1])
+				day, err3 := strconv.Atoi(xs[2])
+				if err1 == nil && err2 == nil && err3 == nil {
+					now = jst.ShortDate(year, time.Month(month), day)
+				}
 			}
 		}
 
