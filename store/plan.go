@@ -53,6 +53,10 @@ func FindPlans(ctx context.Context, c *firestore.Client, r jst.Range) ([]model.P
 		plans = append(plans, p.Plan())
 	}
 
+	if plans == nil {
+		return nil, common.ErrNotFound
+	}
+
 	return plans, nil
 }
 

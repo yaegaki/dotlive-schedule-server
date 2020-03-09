@@ -21,12 +21,24 @@ func createSchedule(ctx context.Context, c *firestore.Client, date jst.Time, act
 	}
 
 	plans, err := store.FindPlans(ctx, c, r)
+	// 予定が見つからなかった場合は空で返す
+	if err == common.ErrNotFound {
+		return createEmptySchedule(date), nil
+	}
+
 	if err != nil {
 		return model.Schedule{}, err
 	}
 
 	videos, err := store.FindVideos(ctx, c, r)
 	return createScheduleInternal(date.FloorToDay(), plans, videos, actors)
+}
+
+func createEmptySchedule(date jst.Time) model.Schedule {
+	return model.Schedule{
+		Date:    date.FloorToDay(),
+		Entries: []model.ScheduleEntry{},
+	}
 }
 
 func createScheduleInternal(date jst.Time, plans []model.Plan, videos []model.Video, actors []model.Actor) (model.Schedule, error) {
@@ -41,17 +53,12 @@ func createScheduleInternal(date jst.Time, plans []model.Plan, videos []model.Vi
 	}
 
 	if !found {
-		return model.Schedule{}, common.ErrNotFound
-	}
-
-	if len(targetPlan.Entries) == 0 {
-		return model.Schedule{
-			Date: targetPlan.Date,
-		}, nil
+		return createEmptySchedule(date), nil
 	}
 
 	scheduleRange := jst.Range{
 		Begin: targetPlan.Date,
+		End:   targetPlan.Date.AddOneDay().Add(-1 * time.Second),
 	}
 
 	for _, e := range targetPlan.Entries {
@@ -59,7 +66,7 @@ func createScheduleInternal(date jst.Time, plans []model.Plan, videos []model.Vi
 	}
 
 	scheduleRange.End = scheduleRange.End.Add(30 * time.Minute)
-	var entries []model.ScheduleEntry
+	entries := []model.ScheduleEntry{}
 	var addedPlanEntries []model.PlanEntry
 
 	for _, v := range videos {
