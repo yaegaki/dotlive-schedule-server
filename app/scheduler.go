@@ -62,7 +62,9 @@ func createScheduleInternal(date jst.Time, plans []model.Plan, videos []model.Vi
 	}
 
 	for _, e := range targetPlan.Entries {
-		scheduleRange.End = e.StartAt
+		if e.StartAt.After(scheduleRange.End) {
+			scheduleRange.End = e.StartAt
+		}
 	}
 
 	scheduleRange.End = scheduleRange.End.Add(30 * time.Minute)
