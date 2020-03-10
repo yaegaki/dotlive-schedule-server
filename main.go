@@ -14,6 +14,8 @@ func main() {
 	}
 
 	e := echo.New()
+	e.HideBanner = true
+
 	app.Route(e)
 
 	e.Logger.Fatal(e.Start(":" + port))
