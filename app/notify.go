@@ -52,7 +52,6 @@ func pushNotifyLatestPlan(ctx context.Context, c *firestore.Client, msgCli *mess
 		return
 	}
 
-	// TODO: プッシュ通知を送る
 	log.Printf("push notify plan: %v", plan.Date)
 	err = notify.PushNotifyPlan(ctx, msgCli, plan, actors)
 	if err != nil {
@@ -83,6 +82,10 @@ func pushNotifyVideo(ctx context.Context, c *firestore.Client, msgCli *messaging
 
 	// 現在時間より2時間前の場合は古いので通知しない
 	notifyLimit := now.Add(-2 * time.Hour)
+
+	// 既にプッシュ通知を送った配信者
+	// 同時に複数のプッシュ通知を送らないように制御する
+	notifiedActor := map[string]bool{}
 
 	for _, v := range videos {
 		isPlanned := false
@@ -120,6 +123,13 @@ func pushNotifyVideo(ctx context.Context, c *firestore.Client, msgCli *messaging
 			continue
 		}
 
+		if _, ok := notifiedActor[v.ActorID]; ok {
+			log.Printf("Skip notify video because duplicate notification. video:%v acthor:%v", v.ID, v.ActorID)
+			continue
+		}
+
+		notifiedActor[v.ActorID] = true
+
 		if startAt.Before(notifyLimit) {
 			log.Printf("Skip notify video because old. video:%v startAt:%v now:%v", v.ID, startAt, now)
 			continue
@@ -137,8 +147,7 @@ func pushNotifyVideo(ctx context.Context, c *firestore.Client, msgCli *messaging
 			continue
 		}
 
-		// TODO: push通知
-		log.Printf("push notify video: %v, %v, %v, %v", v.ID, v.Text, isPlanned, v.IsLive)
+		log.Printf("push notify video: %v, %v, isPlanned:%v, isLive:%v", v.ID, v.Text, isPlanned, v.IsLive)
 		err = notify.PushNotifyVideo(ctx, msgCli, v, actor)
 		if err != nil {
 			log.Printf("Can not send push notification: %v", err)
