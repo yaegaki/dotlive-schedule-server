@@ -15,7 +15,7 @@ import (
 )
 
 var bilibiliURLPrefixes = []string{
-	"https://live.bilibili.com/21307497",
+	"https://live.bilibili.com/",
 }
 
 // IsBilibiliURL URLがBilibiliのものかどうか
