@@ -10,7 +10,7 @@ import (
 func getTimeline(api *anaconda.TwitterApi, screenName, lastTweetID string) ([]Tweet, error) {
 	param := url.Values{
 		"screen_name":     []string{screenName},
-		"exclude_replies": []string{"true"},
+		"exclude_replies": []string{"false"},
 		"include_rts":     []string{"false"},
 	}
 	if lastTweetID != "" {
