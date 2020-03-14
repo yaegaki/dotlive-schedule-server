@@ -7,3 +7,9 @@ handlers:
   - url: /(.*)
     script: auto
     secure: always
+
+automatic_scaling:
+  min_idle_instances: automatic
+  max_idle_instances: 1
+  min_pending_latency: 2000ms
+  max_pending_latency: automatic
