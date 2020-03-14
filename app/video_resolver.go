@@ -23,7 +23,7 @@ type videoResolver struct {
 }
 
 // newVideoResolver videoResolverを作成する
-func newVideoResolver(ctx context.Context, c *firestore.Client) (tweet.VideoResolver, error) {
+func newVideoResolver(ctx context.Context, c *firestore.Client) (*videoResolver, error) {
 	httpClient, err := google.DefaultClient(ctx, y.YoutubeReadonlyScope)
 	if err != nil {
 		return nil, xerrors.Errorf("Can not create http client: %w", err)

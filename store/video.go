@@ -68,20 +68,20 @@ func getVideos(it *firestore.DocumentIterator) ([]model.Video, error) {
 }
 
 // SaveVideo 動画を保存する
-// 既に存在している場合は何もしない
+// 既に存在している場合は通知設定は更新されない
 func SaveVideo(ctx context.Context, c *firestore.Client, v model.Video) error {
 	temp := fromVideo(v)
 
 	return c.RunTransaction(ctx, func(ctx context.Context, t *firestore.Transaction) error {
 		docRef := c.Collection(collectionNameVideo).Doc(v.ID)
-		_, err := t.Get(docRef)
+		doc, err := t.Get(docRef)
 
-		// 既に存在する場合は上書きしない
+		// 既に存在する場合は通知設定を引き継ぐ
 		if err == nil {
-			return nil
-		}
-
-		if status.Code(err) != codes.NotFound {
+			var oldVideo model.Video
+			doc.DataTo(&oldVideo)
+			temp.Notified = oldVideo.Notified
+		} else if status.Code(err) != codes.NotFound {
 			return err
 		}
 

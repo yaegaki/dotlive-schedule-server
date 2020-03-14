@@ -18,6 +18,7 @@ import (
 	"github.com/yaegaki/dotlive-schedule-server/model"
 	"github.com/yaegaki/dotlive-schedule-server/store"
 	"github.com/yaegaki/dotlive-schedule-server/tweet"
+	"github.com/yaegaki/dotlive-schedule-server/youtube"
 )
 
 // Route httpのハンドラを設定する
@@ -118,6 +119,9 @@ func jobHandler(c echo.Context) error {
 	// ツイートから動画情報を取得する
 	tweet.ResolveVideos(api, actors, videoResolver)
 
+	// 開始時間の更新
+	updateVideoStartAt(ctx, client, videoResolver, actors)
+
 	// プッシュ通知
 	pushNotify(ctx, client, actors)
 
@@ -146,4 +150,43 @@ func updateProfileImage(ctx context.Context, api *anaconda.TwitterApi, c *firest
 	}
 
 	*actor = copy
+}
+
+// updateVideoStartAt 開始予定時間より早く始まっている場合に開始時間を修正する
+func updateVideoStartAt(ctx context.Context, c *firestore.Client, vr *videoResolver, actors model.ActorSlice) {
+	videos, err := store.FindNotNotifiedVideos(ctx, c)
+	if err != nil {
+		log.Printf("Can not get videos: %v", err)
+		return
+	}
+
+	now := jst.Now()
+
+	for _, v := range videos {
+		if v.StartAt.Before(now) {
+			continue
+		}
+
+		actor, err := actors.FindActor(v.ActorID)
+		if err != nil {
+			log.Printf("Can not get actor %v", v.ActorID)
+			continue
+		}
+
+		newVideo, err := youtube.FindVideo(ctx, vr.youtubeService, v.URL, actor)
+		if err != nil {
+			log.Printf("Can not get video info %v: %v", v.ID, err)
+			continue
+		}
+
+		if v.StartAt.Equal(newVideo.StartAt) {
+			continue
+		}
+		v.StartAt = newVideo.StartAt
+
+		err = store.SaveVideo(ctx, c, v)
+		if err != nil {
+			log.Printf("Can not save video %v: %v", v.ID, err)
+		}
+	}
 }
