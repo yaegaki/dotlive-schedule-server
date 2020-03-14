@@ -79,19 +79,33 @@ func FindVideo(ctx context.Context, s *y.Service, youtubeURL string, actor model
 		URL:     youtubeURL,
 	}
 
-	var startAtStr string
+	var startAt time.Time
 	if item.LiveStreamingDetails != nil {
 		// プレミア公開の場合もLiveStreamingDetailsが存在する
 		v.IsLive = true
-		startAtStr = item.LiveStreamingDetails.ScheduledStartTime
+		startAt, err = time.Parse(time.RFC3339, item.LiveStreamingDetails.ScheduledStartTime)
+		if err != nil {
+			return model.Video{}, err
+		}
+
+		// 既に始まってる場合。
+		if item.LiveStreamingDetails.ActualStartTime != "" {
+			actualStartAt, err := time.Parse(time.RFC3339, item.LiveStreamingDetails.ActualStartTime)
+			if err != nil {
+				return model.Video{}, err
+			}
+
+			if actualStartAt.Before(startAt) {
+				startAt = actualStartAt
+			}
+		}
 	} else {
-		startAtStr = item.Snippet.PublishedAt
+		startAt, err = time.Parse(time.RFC3339, item.LiveStreamingDetails.ScheduledStartTime)
+		if err != nil {
+			return model.Video{}, err
+		}
 	}
 
-	startAt, err := time.Parse(time.RFC3339, startAtStr)
-	if err != nil {
-		return model.Video{}, err
-	}
 	v.StartAt = jst.From(startAt)
 
 	return v, nil
