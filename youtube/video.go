@@ -100,7 +100,7 @@ func FindVideo(ctx context.Context, s *y.Service, youtubeURL string, actor model
 			}
 		}
 	} else {
-		startAt, err = time.Parse(time.RFC3339, item.LiveStreamingDetails.ScheduledStartTime)
+		startAt, err = time.Parse(time.RFC3339, item.Snippet.PublishedAt)
 		if err != nil {
 			return model.Video{}, err
 		}
