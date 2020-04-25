@@ -6,8 +6,8 @@ import (
 
 	"firebase.google.com/go/messaging"
 	. "github.com/yaegaki/dotlive-schedule-server/internal/testutil/actor"
+	. "github.com/yaegaki/dotlive-schedule-server/internal/testutil/plan"
 	"github.com/yaegaki/dotlive-schedule-server/jst"
-	"github.com/yaegaki/dotlive-schedule-server/model"
 )
 
 type client struct {
@@ -33,27 +33,17 @@ func (c client) Send(ctx context.Context, message *messaging.Message) (string, e
 
 func TestNotifyPlan(t *testing.T) {
 	tests := []struct {
-		date    jst.Time
-		entries []struct {
-			actor  model.Actor
-			hour   int
-			min    int
-			source string
-		}
+		date  jst.Time
+		parts []EntryPart
 		topic string
 		title string
 		body  string
 	}{
 		{
 			jst.ShortDate(2020, 4, 24),
-			[]struct {
-				actor  model.Actor
-				hour   int
-				min    int
-				source string
-			}{
-				{Siro, 19, 0, model.VideoSourceBilibili},
-				{Suzu, 22, 0, model.VideoSourceYoutube},
+			[]EntryPart{
+				CreateEntryPartBilibili(Siro, 19, 0),
+				CreateEntryPart(Suzu, 22, 0),
 			},
 			"plan",
 			"生放送スケジュール4月24日",
@@ -61,26 +51,16 @@ func TestNotifyPlan(t *testing.T) {
 		},
 		{
 			jst.ShortDate(2099, 4, 1),
-			[]struct {
-				actor  model.Actor
-				hour   int
-				min    int
-				source string
-			}{},
+			[]EntryPart{},
 			"plan",
 			"生放送スケジュール4月1日",
 			"なし",
 		},
 		{
 			jst.ShortDate(2099, 4, 2),
-			[]struct {
-				actor  model.Actor
-				hour   int
-				min    int
-				source string
-			}{
-				{Siro, 19, 0, model.VideoSourceYoutube},
-				{Suzu, 22, 0, model.VideoSourceYoutube},
+			[]EntryPart{
+				CreateEntryPart(Siro, 19, 0),
+				CreateEntryPart(Suzu, 22, 0),
 			},
 			"plan",
 			"生放送スケジュール4月2日",
@@ -97,19 +77,7 @@ func TestNotifyPlan(t *testing.T) {
 				m: createMessage(tt.topic, tt.title, tt.body),
 			}
 
-			var entries []model.PlanEntry
-			for _, e := range tt.entries {
-				entries = append(entries, model.PlanEntry{
-					ActorID: e.actor.ID,
-					StartAt: jst.Date(tt.date.Year(), tt.date.Month(), tt.date.Day(), e.hour, e.min),
-					Source:  e.source,
-				})
-			}
-
-			PushNotifyPlan(ctx, cli, model.Plan{
-				Date:    tt.date,
-				Entries: entries,
-			}, All)
+			PushNotifyPlan(ctx, cli, CreatePlan(tt.date, tt.parts), All)
 		})
 	}
 

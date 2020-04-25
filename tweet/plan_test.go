@@ -9,6 +9,123 @@ import (
 	"github.com/yaegaki/dotlive-schedule-server/model"
 )
 
+func TestPlanParser(t *testing.T) {
+	tests := []struct {
+		name      string
+		tweetDate jst.Time
+		tweet     string
+		parts     []EntryPart
+	}{
+		{
+			"2020/2/26",
+			jst.ShortDate(2020, 2, 25),
+			`【どっとライブ】【アイドル部】
+【生放送スケジュール2月26日】
+
+19:00~: #ヤマトイオリ
+21:00~: #カルロピノ
+22:00~: #神楽すず
+23:00~: #メリーミルク
+
+メンバーの動画、SNSのリンクはこちらから！
+http://vrlive.party/member/
+
+#アイドル部　#どっとライブ`,
+			[]EntryPart{
+				CreateEntryPart(Iori, 19, 00),
+				CreateEntryPart(Pino, 21, 00),
+				CreateEntryPart(Suzu, 22, 00),
+				CreateEntryPart(Milk, 23, 00),
+			},
+		},
+		{
+			"2020/2/28",
+			jst.ShortDate(2020, 2, 27),
+			`【どっとライブ】【アイドル部】
+【生放送スケジュール2月28日】
+
+20:00~: #シロ生放送 (bilibili)
+22:00~: #北上双葉
+23:00~: #神楽すず
+
+メンバーの動画、SNSのリンクはこちらから！
+http://vrlive.party/member/
+
+#アイドル部　#どっとライブ`,
+			[]EntryPart{
+				CreateEntryPartBilibili(Siro, 20, 00),
+				CreateEntryPart(Futaba, 22, 00),
+				CreateEntryPart(Suzu, 23, 00),
+			},
+		},
+		{
+			"2020/2/22",
+			jst.ShortDate(2020, 2, 21),
+			`【生放送スケジュール2月22日】
+
+12:00~: #神楽すず
+15:00~: #カルロピノ
+18:00~: #北上双葉
+19:00~: #花京院ちえり
+20:00~: #Vに国境はいらない（出演時間21:30~を予定）
+24:00~: #カルロピノ
+
+メンバーの動画、SNSのリンクはこちらから！
+http://vrlive.party/member/
+
+#アイドル部　#どっとライブ`,
+			[]EntryPart{
+				CreateEntryPart(Suzu, 12, 00),
+				CreateEntryPart(Pino, 15, 00),
+				CreateEntryPart(Futaba, 18, 00),
+				CreateEntryPart(Chieri, 19, 00),
+				CreateEntryPart(Pino, 24, 00),
+			},
+		},
+		{
+			"2020/4/24",
+			jst.ShortDate(2020, 4, 23),
+			`【どっとライブ】【アイドル部】
+【生放送スケジュール4月24日】
+
+19:00~: #シロ生放送 (bilibili)
+22:00~: #神楽すず
+
+メンバーの動画、SNSのリンクはこちらから！
+http://vrlive.party/member/
+
+#アイドル部　#どっとライブ`,
+			[]EntryPart{
+				CreateEntryPartBilibili(Siro, 19, 00),
+				CreateEntryPart(Suzu, 22, 00),
+			},
+		},
+		{
+			"Empty",
+			jst.ShortDate(2090, 4, 1),
+			`【どっとライブ】【アイドル部】
+【生放送スケジュール4月2日】
+
+
+メンバーの動画、SNSのリンクはこちらから！
+http://vrlive.party/member/
+
+#アイドル部　#どっとライブ`,
+			[]EntryPart{},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			comparePlan(t, Tweet{
+				ID:   "temp",
+				Date: tt.tweetDate,
+				Text: tt.tweet,
+			}, CreatePlan(tt.tweetDate.AddOneDay(), tt.parts))
+		})
+	}
+}
+
 func comparePlan(t *testing.T, tweet Tweet, expect model.Plan) {
 	pp := planParser{
 		actors: All,
@@ -46,129 +163,4 @@ func comparePlan(t *testing.T, tweet Tweet, expect model.Plan) {
 			continue
 		}
 	}
-}
-
-func TestPlanParser(t *testing.T) {
-
-	text := `【どっとライブ】【アイドル部】
-【生放送スケジュール2月26日】
-
-19:00~: #ヤマトイオリ
-21:00~: #カルロピノ
-22:00~: #神楽すず
-23:00~: #メリーミルク
-
-メンバーの動画、SNSのリンクはこちらから！
-http://vrlive.party/member/
-
-#アイドル部　#どっとライブ`
-
-	tweet := Tweet{
-		ID:   "tempID",
-		Text: text,
-		Date: jst.ShortDate(2020, 2, 25),
-	}
-
-	date := tweet.Date.AddOneDay()
-	comparePlan(t, tweet, model.Plan{
-		Date: date,
-		Entries: []model.PlanEntry{
-			CreateEntry(date, Iori, 19, 00),
-			CreateEntry(date, Pino, 21, 00),
-			CreateEntry(date, Suzu, 22, 00),
-			CreateEntry(date, Milk, 23, 00),
-		},
-	})
-}
-
-func TestPlanParser2(t *testing.T) {
-	text := `【どっとライブ】【アイドル部】
-【生放送スケジュール2月28日】
-
-20:00~: #シロ生放送 (bilibili)
-22:00~: #北上双葉
-23:00~: #神楽すず
-
-メンバーの動画、SNSのリンクはこちらから！
-http://vrlive.party/member/
-
-#アイドル部　#どっとライブ`
-
-	tweet := Tweet{
-		ID:   "tempID",
-		Text: text,
-		Date: jst.ShortDate(2020, 2, 27),
-	}
-
-	date := tweet.Date.AddOneDay()
-	comparePlan(t, tweet, model.Plan{
-		Date: date,
-		Entries: []model.PlanEntry{
-			CreateEntryBilibili(date, Siro, 20, 00),
-			CreateEntry(date, Futaba, 22, 00),
-			CreateEntry(date, Suzu, 23, 00),
-		},
-	})
-}
-
-func TestPlanParser3(t *testing.T) {
-	text := `【生放送スケジュール2月22日】
-
-12:00~: #神楽すず
-15:00~: #カルロピノ
-18:00~: #北上双葉
-19:00~: #花京院ちえり
-20:00~: #Vに国境はいらない（出演時間21:30~を予定）
-24:00~: #カルロピノ
-
-メンバーの動画、SNSのリンクはこちらから！
-http://vrlive.party/member/
-
-#アイドル部　#どっとライブ`
-
-	tweet := Tweet{
-		ID:   "tempID",
-		Text: text,
-		Date: jst.ShortDate(2020, 2, 21),
-	}
-
-	date := tweet.Date.AddOneDay()
-	comparePlan(t, tweet, model.Plan{
-		Date: date,
-		Entries: []model.PlanEntry{
-			CreateEntry(date, Suzu, 12, 00),
-			CreateEntry(date, Pino, 15, 00),
-			CreateEntry(date, Futaba, 18, 00),
-			CreateEntry(date, Chieri, 19, 00),
-			CreateEntry(date, Pino, 24, 00),
-		},
-	})
-}
-
-func TestPlanParser4(t *testing.T) {
-	text := `【どっとライブ】【アイドル部】
-【生放送スケジュール4月24日】
-
-19:00~: #シロ生放送 (bilibili)
-22:00~: #神楽すず
-
-メンバーの動画、SNSのリンクはこちらから！
-http://vrlive.party/member/
-
-#アイドル部　#どっとライブ`
-
-	tweet := Tweet{
-		ID:   "tempID",
-		Text: text,
-		Date: jst.ShortDate(2020, 4, 23),
-	}
-
-	date := tweet.Date.AddOneDay()
-	comparePlan(t, tweet, model.Plan{
-		Date: date,
-		Entries: []model.PlanEntry{
-			CreateEntryBilibili(date, Siro, 19, 00),
-			CreateEntry(date, Suzu, 22, 00),
-		},
-	})
 }
