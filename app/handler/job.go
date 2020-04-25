@@ -1,18 +1,16 @@
-package app
+package handler
 
 import (
 	"context"
-	"encoding/json"
 	"log"
 	"net/http"
 	"os"
-	"strconv"
 	"strings"
-	"time"
 
 	"cloud.google.com/go/firestore"
 	"github.com/ChimeraCoder/anaconda"
 	"github.com/labstack/echo/v4"
+	"github.com/yaegaki/dotlive-schedule-server/app/service"
 	"github.com/yaegaki/dotlive-schedule-server/common"
 	"github.com/yaegaki/dotlive-schedule-server/jst"
 	"github.com/yaegaki/dotlive-schedule-server/model"
@@ -21,45 +19,11 @@ import (
 	"github.com/yaegaki/dotlive-schedule-server/youtube"
 )
 
-// Route httpのハンドラを設定する
-func Route(e *echo.Echo) {
-	e.GET("/_task/job", jobHandler)
-	e.GET("/", func(c echo.Context) error {
-		ctx := c.Request().Context()
-		client, err := firestore.NewClient(ctx, "dotlive-schedule")
-		if err != nil {
-			return c.String(http.StatusInternalServerError, "error1")
-		}
-
-		now := jst.Now()
-		q := c.Request().URL.Query().Get("q")
-		if q != "" {
-			xs := strings.Split(q, "-")
-			if len(xs) == 3 {
-				year, err1 := strconv.Atoi(xs[0])
-				month, err2 := strconv.Atoi(xs[1])
-				day, err3 := strconv.Atoi(xs[2])
-				if err1 == nil && err2 == nil && err3 == nil {
-					now = jst.ShortDate(year, time.Month(month), day)
-				}
-			}
-		}
-
-		actors, err := store.FindActors(ctx, client)
-		if err != nil {
-			return c.String(http.StatusInternalServerError, "error2")
-		}
-
-		s, _ := createSchedule(ctx, client, now, actors)
-		bytes, _ := json.Marshal(s)
-		return c.JSONBlob(http.StatusOK, bytes)
-	})
-}
-
 // appEngineCronHeader
 const appEngineCronHeader = "X-Appengine-Cron"
 
-func jobHandler(c echo.Context) error {
+// JobHandler 定期実行ジョブ
+func JobHandler(c echo.Context) error {
 	ctx := c.Request().Context()
 	isDevelop := os.Getenv("DEVELOP") == "true"
 
@@ -74,7 +38,7 @@ func jobHandler(c echo.Context) error {
 	}
 	defer client.Close()
 
-	videoResolver, err := newVideoResolver(ctx, client)
+	videoResolver, err := service.NewVideoResolver(ctx, client)
 	if err != nil {
 		log.Printf("Can not create VideoResolver: %v", err)
 		return c.String(http.StatusInternalServerError, "error2")
@@ -123,7 +87,7 @@ func jobHandler(c echo.Context) error {
 	updateVideoStartAt(ctx, client, videoResolver, actors)
 
 	// プッシュ通知
-	pushNotify(ctx, client, actors)
+	service.PushNotify(ctx, client, actors)
 
 	return c.String(http.StatusOK, "done.")
 }
@@ -153,7 +117,7 @@ func updateProfileImage(ctx context.Context, api *anaconda.TwitterApi, c *firest
 }
 
 // updateVideoStartAt 開始予定時間より早く始まっている場合に開始時間を修正する
-func updateVideoStartAt(ctx context.Context, c *firestore.Client, vr *videoResolver, actors model.ActorSlice) {
+func updateVideoStartAt(ctx context.Context, c *firestore.Client, vr *service.VideoResolver, actors model.ActorSlice) {
 	videos, err := store.FindNotNotifiedVideos(ctx, c)
 	if err != nil {
 		log.Printf("Can not get videos: %v", err)
@@ -173,7 +137,7 @@ func updateVideoStartAt(ctx context.Context, c *firestore.Client, vr *videoResol
 			continue
 		}
 
-		newVideo, err := youtube.FindVideo(ctx, vr.youtubeService, v.URL, actor)
+		newVideo, err := youtube.FindVideo(ctx, vr.YoutubeService(), v.URL, actor)
 		if err != nil {
 			log.Printf("Can not get video info %v: %v", v.ID, err)
 			continue

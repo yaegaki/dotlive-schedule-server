@@ -1,4 +1,4 @@
-package app
+package service
 
 import (
 	"context"
@@ -13,8 +13,8 @@ import (
 	"github.com/yaegaki/dotlive-schedule-server/store"
 )
 
-// createSchedules スケジュールを作成する
-func createSchedule(ctx context.Context, c *firestore.Client, date jst.Time, actors []model.Actor) (model.Schedule, error) {
+// CreateSchedule スケジュールを作成する
+func CreateSchedule(ctx context.Context, c *firestore.Client, date jst.Time, actors []model.Actor) (model.Schedule, error) {
 	r := jst.Range{
 		Begin: date.AddDay(-2),
 		End:   date.AddOneDay(),

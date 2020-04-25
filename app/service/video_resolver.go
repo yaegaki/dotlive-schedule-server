@@ -1,4 +1,4 @@
-package app
+package service
 
 import (
 	"context"
@@ -15,15 +15,15 @@ import (
 	y "google.golang.org/api/youtube/v3"
 )
 
-// videoResolver ビデオ情報の解決をする
-type videoResolver struct {
+// VideoResolver ビデオ情報の解決をする
+type VideoResolver struct {
 	ctx            context.Context
 	c              *firestore.Client
 	youtubeService *y.Service
 }
 
-// newVideoResolver videoResolverを作成する
-func newVideoResolver(ctx context.Context, c *firestore.Client) (*videoResolver, error) {
+// NewVideoResolver videoResolverを作成する
+func NewVideoResolver(ctx context.Context, c *firestore.Client) (*VideoResolver, error) {
 	httpClient, err := google.DefaultClient(ctx, y.YoutubeReadonlyScope)
 	if err != nil {
 		return nil, xerrors.Errorf("Can not create http client: %w", err)
@@ -34,7 +34,7 @@ func newVideoResolver(ctx context.Context, c *firestore.Client) (*videoResolver,
 		return nil, xerrors.Errorf("Can not create youtube service:%w", err)
 	}
 
-	return &videoResolver{
+	return &VideoResolver{
 		ctx:            ctx,
 		c:              c,
 		youtubeService: youtubeService,
@@ -42,7 +42,7 @@ func newVideoResolver(ctx context.Context, c *firestore.Client) (*videoResolver,
 }
 
 // Resolve impl tweet.VideoResolver
-func (r *videoResolver) Resolve(tweet tweet.Tweet, url string, actor model.Actor) error {
+func (r *VideoResolver) Resolve(tweet tweet.Tweet, url string, actor model.Actor) error {
 	if youtube.IsYoutubeURL(url) {
 		return r.resolveYoutubeVideo(tweet, url, actor)
 	} else if bilibili.IsBilibiliURL(url) {
@@ -52,7 +52,7 @@ func (r *videoResolver) Resolve(tweet tweet.Tweet, url string, actor model.Actor
 	return nil
 }
 
-func (r *videoResolver) resolveYoutubeVideo(tweet tweet.Tweet, url string, actor model.Actor) error {
+func (r *VideoResolver) resolveYoutubeVideo(tweet tweet.Tweet, url string, actor model.Actor) error {
 	v, err := youtube.FindVideo(r.ctx, r.youtubeService, url, actor)
 	if err == common.ErrInvalidChannel {
 		return nil
@@ -71,7 +71,7 @@ func (r *videoResolver) resolveYoutubeVideo(tweet tweet.Tweet, url string, actor
 	return nil
 }
 
-func (r *videoResolver) resolveBilibiliVideo(tweet tweet.Tweet, url string, actor model.Actor) error {
+func (r *VideoResolver) resolveBilibiliVideo(tweet tweet.Tweet, url string, actor model.Actor) error {
 	v, err := bilibili.FindVideo(url, actor, tweet.ID, tweet.Date)
 	if err == common.ErrInvalidChannel {
 		return nil
@@ -90,12 +90,17 @@ func (r *videoResolver) resolveBilibiliVideo(tweet tweet.Tweet, url string, acto
 	return nil
 }
 
-func (r *videoResolver) save(v model.Video) error {
+func (r *VideoResolver) save(v model.Video) error {
 	return store.SaveVideo(r.ctx, r.c, v)
 }
 
 // Mark impl tweet.VideoResolver
-func (r *videoResolver) Mark(tweetID string, actor model.Actor) error {
+func (r *VideoResolver) Mark(tweetID string, actor model.Actor) error {
 	actor.LastTweetID = tweetID
 	return store.SaveActor(r.ctx, r.c, actor)
+}
+
+// YoutubeService YoutubeServiceを取得する
+func (r *VideoResolver) YoutubeService() *y.Service {
+	return r.youtubeService
 }

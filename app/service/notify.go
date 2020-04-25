@@ -1,4 +1,4 @@
-package app
+package service
 
 import (
 	"context"
@@ -14,7 +14,8 @@ import (
 	"github.com/yaegaki/dotlive-schedule-server/store"
 )
 
-func pushNotify(ctx context.Context, c *firestore.Client, actors model.ActorSlice) {
+// PushNotify プッシュ通知を実行する
+func PushNotify(ctx context.Context, c *firestore.Client, actors model.ActorSlice) {
 	app, err := firebase.NewApp(ctx, nil)
 	if err != nil {
 		log.Printf("Can not create firebase app: %v", err)
