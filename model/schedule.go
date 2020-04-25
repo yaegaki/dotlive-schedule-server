@@ -21,6 +21,8 @@ type ScheduleEntry struct {
 	VideoID string `json:"videoId"`
 	// URL 配信URL
 	URL string `json:"url"`
+	// Source 配信サイト
+	Source string `json:"source"`
 	// Planned 計画配信かどうか
 	Planned bool `json:"planned"`
 	// IsLive 生放送かどうか

@@ -145,6 +145,7 @@ func createScheduleInternal(date jst.Time, plans []model.Plan, videos []model.Vi
 			Text:      v.Text,
 			URL:       v.URL,
 			VideoID:   v.ID,
+			Source:    v.Source,
 		}
 		entries = append(entries, se)
 	}
@@ -173,6 +174,7 @@ func createScheduleInternal(date jst.Time, plans []model.Plan, videos []model.Vi
 			Icon:      actor.Icon,
 			StartAt:   e.StartAt,
 			Planned:   true,
+			Source:    e.Source,
 		}
 		entries = append(entries, se)
 	}

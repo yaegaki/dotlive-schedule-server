@@ -78,9 +78,17 @@ func (pp planParser) parse(t Tweet) (model.Plan, error) {
 					continue
 				}
 
+				var source string
+				if strings.Contains(strings.ToLower(line), "bilibili") {
+					source = model.VideoSourceBilibili
+				} else {
+					source = model.VideoSourceYoutube
+				}
+
 				p.Entries = append(p.Entries, model.PlanEntry{
 					ActorID: actor.ID,
 					StartAt: startAt,
+					Source:  source,
 				})
 			}
 		}

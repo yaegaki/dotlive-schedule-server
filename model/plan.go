@@ -25,6 +25,8 @@ type PlanEntry struct {
 	ActorID string
 	// StartAt 開始時間
 	StartAt jst.Time
+	// Source 配信サイト
+	Source string
 }
 
 // IsPlanned 計画配信かどうか

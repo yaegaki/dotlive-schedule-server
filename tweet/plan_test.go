@@ -3,13 +3,15 @@ package tweet
 import (
 	"testing"
 
+	. "github.com/yaegaki/dotlive-schedule-server/internal/testutil/actor"
+	. "github.com/yaegaki/dotlive-schedule-server/internal/testutil/plan"
 	"github.com/yaegaki/dotlive-schedule-server/jst"
 	"github.com/yaegaki/dotlive-schedule-server/model"
 )
 
 func comparePlan(t *testing.T, tweet Tweet, expect model.Plan) {
 	pp := planParser{
-		actors: actors,
+		actors: All,
 	}
 
 	p, err := pp.parse(tweet)
@@ -36,6 +38,11 @@ func comparePlan(t *testing.T, tweet Tweet, expect model.Plan) {
 
 		if !e.StartAt.Equal(expectEntry.StartAt) {
 			t.Errorf("invalid StartAt, got: %v expect: %v", e.StartAt, expectEntry.StartAt)
+			continue
+		}
+
+		if e.Source != expectEntry.Source {
+			t.Errorf("Invalid source, got: %v expect: %v", e.Source, expectEntry.Source)
 			continue
 		}
 	}
@@ -66,10 +73,10 @@ http://vrlive.party/member/
 	comparePlan(t, tweet, model.Plan{
 		Date: date,
 		Entries: []model.PlanEntry{
-			createEntry(date, iori, 19, 00),
-			createEntry(date, pino, 21, 00),
-			createEntry(date, suzu, 22, 00),
-			createEntry(date, milk, 23, 00),
+			CreateEntry(date, Iori, 19, 00),
+			CreateEntry(date, Pino, 21, 00),
+			CreateEntry(date, Suzu, 22, 00),
+			CreateEntry(date, Milk, 23, 00),
 		},
 	})
 }
@@ -97,9 +104,9 @@ http://vrlive.party/member/
 	comparePlan(t, tweet, model.Plan{
 		Date: date,
 		Entries: []model.PlanEntry{
-			createEntry(date, siro, 20, 00),
-			createEntry(date, futaba, 22, 00),
-			createEntry(date, suzu, 23, 00),
+			CreateEntryBilibili(date, Siro, 20, 00),
+			CreateEntry(date, Futaba, 22, 00),
+			CreateEntry(date, Suzu, 23, 00),
 		},
 	})
 }
@@ -129,75 +136,39 @@ http://vrlive.party/member/
 	comparePlan(t, tweet, model.Plan{
 		Date: date,
 		Entries: []model.PlanEntry{
-			createEntry(date, suzu, 12, 00),
-			createEntry(date, pino, 15, 00),
-			createEntry(date, futaba, 18, 00),
-			createEntry(date, chieri, 19, 00),
-			createEntry(date, pino, 24, 00),
+			CreateEntry(date, Suzu, 12, 00),
+			CreateEntry(date, Pino, 15, 00),
+			CreateEntry(date, Futaba, 18, 00),
+			CreateEntry(date, Chieri, 19, 00),
+			CreateEntry(date, Pino, 24, 00),
 		},
 	})
 }
 
-func createEntry(date jst.Time, actor model.Actor, hour, min int) model.PlanEntry {
-	return model.PlanEntry{
-		ActorID: actor.ID,
-		StartAt: jst.Date(date.Year(), date.Month(), date.Day(), hour, min),
+func TestPlanParser4(t *testing.T) {
+	text := `【どっとライブ】【アイドル部】
+【生放送スケジュール4月24日】
+
+19:00~: #シロ生放送 (bilibili)
+22:00~: #神楽すず
+
+メンバーの動画、SNSのリンクはこちらから！
+http://vrlive.party/member/
+
+#アイドル部　#どっとライブ`
+
+	tweet := Tweet{
+		ID:   "tempID",
+		Text: text,
+		Date: jst.ShortDate(2020, 4, 23),
 	}
-}
 
-var iori = model.Actor{
-	ID:      "iori",
-	Hashtag: "#ヤマトイオリ",
-}
-
-var pino = model.Actor{
-	ID:      "pino",
-	Hashtag: "#カルロピノ",
-}
-
-var suzu = model.Actor{
-	ID:      "suzu",
-	Hashtag: "#神楽すず",
-}
-
-var chieri = model.Actor{
-	ID:      "chieri",
-	Hashtag: "#花京院ちえり",
-}
-
-var iroha = model.Actor{
-	ID:      "iroha",
-	Hashtag: "#金剛いろは",
-}
-
-var futaba = model.Actor{
-	ID:      "futaba",
-	Hashtag: "#北上双葉",
-}
-
-var mememe = model.Actor{
-	ID:      "mememe",
-	Hashtag: "#もこ田めめめ",
-}
-
-var siro = model.Actor{
-	ID:      "siro",
-	Hashtag: "#シロ生放送",
-}
-
-var milk = model.Actor{
-	ID:      "milk",
-	Hashtag: "#メリーミルク",
-}
-
-var actors = []model.Actor{
-	iori,
-	pino,
-	suzu,
-	chieri,
-	iroha,
-	futaba,
-	mememe,
-	siro,
-	milk,
+	date := tweet.Date.AddOneDay()
+	comparePlan(t, tweet, model.Plan{
+		Date: date,
+		Entries: []model.PlanEntry{
+			CreateEntryBilibili(date, Siro, 19, 00),
+			CreateEntry(date, Suzu, 22, 00),
+		},
+	})
 }

@@ -10,20 +10,10 @@ import (
 
 // PushNotifyVideo 配信をプッシュ通知する
 func PushNotifyVideo(ctx context.Context, cli *messaging.Client, v model.Video, actor model.Actor) error {
-	_, err := cli.Send(ctx, &messaging.Message{
-		Topic: "video",
-		Notification: &messaging.Notification{
-			Title: fmt.Sprintf("配信:%v", actor.Name),
-			Body:  v.Text,
-		},
-		APNS: &messaging.APNSConfig{
-			Payload: &messaging.APNSPayload{
-				Aps: &messaging.Aps{
-					Sound: "default",
-				},
-			},
-		},
-	})
+	topic := "video"
+	title := fmt.Sprintf("配信:%v", actor.Name)
+	body := v.Text
+	_, err := cli.Send(ctx, createMessage(topic, title, body))
 
 	return err
 }

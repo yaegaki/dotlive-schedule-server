@@ -31,6 +31,8 @@ type planEntry struct {
 	ActorID string `firestore:"actorID"`
 	// StartAt 配信開始時刻
 	StartAt time.Time `firestore:"startAt"`
+	// Source 配信サイト
+	Source string `firestore:"source"`
 }
 
 const collectionNamePlan = "Plan"
@@ -153,6 +155,7 @@ func fromPlan(p model.Plan) plan {
 		entries = append(entries, planEntry{
 			ActorID: e.ActorID,
 			StartAt: e.StartAt.Time(),
+			Source:  e.Source,
 		})
 	}
 	return plan{
@@ -184,5 +187,6 @@ func (e planEntry) PlanEntry() model.PlanEntry {
 	return model.PlanEntry{
 		ActorID: e.ActorID,
 		StartAt: jst.From(e.StartAt),
+		Source:  e.Source,
 	}
 }
