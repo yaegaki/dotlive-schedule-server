@@ -4,12 +4,12 @@ import (
 	"context"
 	"log"
 	"net/http"
-	"os"
 	"strings"
 
 	"cloud.google.com/go/firestore"
 	"github.com/ChimeraCoder/anaconda"
 	"github.com/labstack/echo/v4"
+	"github.com/yaegaki/dotlive-schedule-server/app/internal"
 	"github.com/yaegaki/dotlive-schedule-server/app/service"
 	"github.com/yaegaki/dotlive-schedule-server/common"
 	"github.com/yaegaki/dotlive-schedule-server/jst"
@@ -22,12 +22,16 @@ import (
 // appEngineCronHeader
 const appEngineCronHeader = "X-Appengine-Cron"
 
-// JobHandler 定期実行ジョブ
-func JobHandler(c echo.Context) error {
-	ctx := c.Request().Context()
-	isDevelop := os.Getenv("DEVELOP") == "true"
+// RouteJob ジョブ関連のルーティングを設定する
+func RouteJob(e *echo.Echo) {
+	e.GET("/_task/job", jobHandler)
+}
 
-	if !isDevelop && c.Request().Header.Get(appEngineCronHeader) != "true" {
+// jobHandler 定期実行ジョブ
+func jobHandler(c echo.Context) error {
+	ctx := c.Request().Context()
+
+	if !internal.IsDevelop && c.Request().Header.Get(appEngineCronHeader) != "true" {
 		return c.String(http.StatusBadRequest, "bad request")
 	}
 

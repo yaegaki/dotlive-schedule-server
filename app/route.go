@@ -7,6 +7,6 @@ import (
 
 // Route httpのハンドラを設定する
 func Route(e *echo.Echo) {
-	e.GET("/_task/job", handler.JobHandler)
-	e.GET("/", handler.ScheduleHandler)
+	handler.RouteJob(e)
+	handler.RouteSchedule(e)
 }

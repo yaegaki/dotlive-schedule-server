@@ -14,7 +14,12 @@ import (
 	"github.com/yaegaki/dotlive-schedule-server/store"
 )
 
-func ScheduleHandler(c echo.Context) error {
+// RouteSchedule スケジュール関連のルーティングを設定する
+func RouteSchedule(e *echo.Echo) {
+	e.GET("/", scheduleHandler)
+}
+
+func scheduleHandler(c echo.Context) error {
 	ctx := c.Request().Context()
 	client, err := firestore.NewClient(ctx, "dotlive-schedule")
 	if err != nil {
