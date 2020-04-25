@@ -62,6 +62,7 @@ func createScheduleInternal(date jst.Time, plans []model.Plan, videos []model.Vi
 	}
 
 	for _, e := range targetPlan.Entries {
+		// 25時などが指定されている場合はスケジュールの終了時間を延ばす
 		if e.StartAt.After(scheduleRange.End) {
 			scheduleRange.End = e.StartAt
 		}
@@ -94,9 +95,9 @@ func createScheduleInternal(date jst.Time, plans []model.Plan, videos []model.Vi
 		pe, err := targetPlan.GetEntry(v)
 		if err == nil {
 			isPlanned = true
-			if v.Source == model.VideoSourceBilibili {
-				startAt = pe.StartAt
-			}
+			// 計画されている場合はその時間に合わせる
+			// 枠取り直した場合などは同じ時間が記録されるが許容する
+			startAt = pe.StartAt
 			addedPlanEntries = append(addedPlanEntries, pe)
 		} else {
 			isPlanned = false

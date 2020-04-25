@@ -42,15 +42,21 @@ func (p Plan) GetEntry(v Video) (PlanEntry, error) {
 			continue
 		}
 
-		planRange := jst.Range{
-			End: e.StartAt.Add(30 * time.Minute),
-		}
-
-		if v.Source == VideoSourceYoutube {
-			planRange.Begin = e.StartAt.Add(-30 * time.Minute)
+		var planRange jst.Range
+		if v.Source == VideoSourceBilibili {
+			// bilibiliは開始時刻が正確にとれないので同じ日であれば計画通りとする
+			// 1日1回という前提
+			d := e.StartAt.FloorToDay()
+			planRange = jst.Range{
+				Begin: d,
+				End:   d.AddOneDay(),
+			}
 		} else {
-			// Bilibiliは開始時間があいまいにしか取れないので-90分までは計画配信とする
-			planRange.Begin = e.StartAt.Add(-90 * time.Minute)
+			// 計画から+-30分以内なら計画通りとする
+			planRange = jst.Range{
+				Begin: e.StartAt.Add(-30 * time.Minute),
+				End:   e.StartAt.Add(30 * time.Minute),
+			}
 		}
 
 		if !planRange.In(v.StartAt) {
