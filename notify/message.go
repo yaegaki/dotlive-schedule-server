@@ -20,3 +20,20 @@ func createMessage(topic, title, body string) *messaging.Message {
 		},
 	}
 }
+
+func createMessageWithCondition(condition, title, body string) *messaging.Message {
+	return &messaging.Message{
+		Condition: condition,
+		Notification: &messaging.Notification{
+			Title: title,
+			Body:  body,
+		},
+		APNS: &messaging.APNSConfig{
+			Payload: &messaging.APNSPayload{
+				Aps: &messaging.Aps{
+					Sound: "default",
+				},
+			},
+		},
+	}
+}

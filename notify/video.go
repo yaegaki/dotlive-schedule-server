@@ -9,10 +9,10 @@ import (
 
 // PushNotifyVideo 配信をプッシュ通知する
 func PushNotifyVideo(ctx context.Context, cli Client, v model.Video, actor model.Actor) error {
-	topic := fmt.Sprintf("'video' in topics && '%v' in topics", actor.TwitterScreenName)
+	condition := fmt.Sprintf("'video' in topics && '%v' in topics", actor.TwitterScreenName)
 	title := fmt.Sprintf("配信:%v", actor.Name)
 	body := v.Text
-	_, err := cli.Send(ctx, createMessage(topic, title, body))
+	_, err := cli.Send(ctx, createMessageWithCondition(condition, title, body))
 
 	return err
 }
