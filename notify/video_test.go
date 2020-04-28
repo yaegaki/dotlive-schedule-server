@@ -9,10 +9,10 @@ import (
 
 func TestNotifyVideo(t *testing.T) {
 	tests := []struct {
-		topic string
-		title string
-		body  string
-		actor model.Actor
+		condition string
+		title     string
+		body      string
+		actor     model.Actor
 	}{
 		{
 			"'video' in topics && 'siro' in topics",
@@ -31,7 +31,7 @@ func TestNotifyVideo(t *testing.T) {
 		t.Run("", func(t *testing.T) {
 			cli := client{
 				t: t,
-				m: createMessage(tt.topic, tt.title, tt.body),
+				m: createMessageWithCondition(tt.condition, tt.title, tt.body),
 			}
 
 			PushNotifyVideo(ctx, cli, model.Video{

@@ -11,13 +11,20 @@ import (
 )
 
 type client struct {
-	t *testing.T
-	m *messaging.Message
+	t         *testing.T
+	m         *messaging.Message
+	condition bool
 }
 
 func (c client) Send(ctx context.Context, message *messaging.Message) (string, error) {
-	if message.Topic != c.m.Topic {
-		c.t.Errorf("topic, got: %v expect: %v", message.Topic, c.m.Topic)
+	if c.condition {
+		if message.Condition != c.m.Condition {
+			c.t.Errorf("condition, got: %v expect: %v", message.Condition, c.m.Condition)
+		}
+	} else {
+		if message.Topic != c.m.Topic {
+			c.t.Errorf("topic, got: %v expect: %v", message.Topic, c.m.Topic)
+		}
 	}
 
 	if message.Notification.Title != c.m.Notification.Title {
