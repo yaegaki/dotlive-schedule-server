@@ -9,4 +9,5 @@ import (
 func Route(e *echo.Echo) {
 	handler.RouteJob(e)
 	handler.RouteSchedule(e)
+	handler.RouteTopic(e)
 }

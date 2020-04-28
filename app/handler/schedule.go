@@ -16,7 +16,10 @@ import (
 
 // RouteSchedule スケジュール関連のルーティングを設定する
 func RouteSchedule(e *echo.Echo) {
+	// TODO: ルートのルーティングはやめる
 	e.GET("/", scheduleHandler)
+
+	e.GET("/api/schedule", scheduleHandler)
 }
 
 func scheduleHandler(c echo.Context) error {
