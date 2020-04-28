@@ -77,7 +77,14 @@ func jobHandler(c echo.Context) error {
 		log.Printf("Can not get plans: %v", err)
 	}
 
+	now := jst.Now()
 	for _, p := range newPlans {
+		// 2日以上前の過去の計画の更新はおかしいので無視する
+		if now.AddDay(-2).After(p.Date) {
+			log.Printf("Invalid plan date %v", p.Date)
+			continue
+		}
+
 		err := store.SavePlan(ctx, client, p)
 		if err != nil {
 			log.Printf("Can not save plan %v: %v", p.Date, err)
