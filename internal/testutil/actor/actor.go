@@ -6,72 +6,92 @@ import (
 
 // Iori .
 var Iori = model.Actor{
-	ID:      "iori",
-	Hashtag: "#ヤマトイオリ",
-	Name:    "ヤマトイオリ",
+	ID:                "iori",
+	Hashtag:           "#ヤマトイオリ",
+	Name:              "ヤマトイオリ",
+	TwitterScreenName: "test-iori",
+	Emoji:             "🍄",
 }
 
 // Pino .
 var Pino = model.Actor{
-	ID:      "pino",
-	Hashtag: "#カルロピノ",
-	Name:    "カルロピノ",
+	ID:                "pino",
+	Hashtag:           "#カルロピノ",
+	Name:              "カルロピノ",
+	TwitterScreenName: "test-pino",
+	Emoji:             "🐜",
 }
 
 // Suzu .
 var Suzu = model.Actor{
-	ID:      "suzu",
-	Hashtag: "#神楽すず",
-	Name:    "神楽すず",
+	ID:                "suzu",
+	Hashtag:           "#神楽すず",
+	Name:              "神楽すず",
+	TwitterScreenName: "test-suzu",
+	Emoji:             "🍋",
 }
 
 // Chieri .
 var Chieri = model.Actor{
-	ID:      "chieri",
-	Hashtag: "#花京院ちえり",
-	Name:    "花京院ちえり",
+	ID:                "chieri",
+	Hashtag:           "#花京院ちえり",
+	Name:              "花京院ちえり",
+	TwitterScreenName: "test-chieri",
+	Emoji:             "🍒",
 }
 
 // Iroha .
 var Iroha = model.Actor{
-	ID:      "iroha",
-	Hashtag: "#金剛いろは",
-	Name:    "金剛いろは",
+	ID:                "iroha",
+	Hashtag:           "#金剛いろは",
+	Name:              "金剛いろは",
+	TwitterScreenName: "test-iroha",
+	Emoji:             "💎",
 }
 
 // Futaba .
 var Futaba = model.Actor{
-	ID:      "futaba",
-	Hashtag: "#北上双葉",
-	Name:    "北上双葉",
+	ID:                "futaba",
+	Hashtag:           "#北上双葉",
+	Name:              "北上双葉",
+	TwitterScreenName: "test-futaba",
+	Emoji:             "🌱",
 }
 
 // Natori .
 var Natori = model.Actor{
-	ID:      "natori",
-	Hashtag: "#八重沢なとり",
-	Name:    "八重沢なとり",
+	ID:                "natori",
+	Hashtag:           "#八重沢なとり",
+	Name:              "八重沢なとり",
+	TwitterScreenName: "test-natori",
+	Emoji:             "🌾",
 }
 
 // Mememe .
 var Mememe = model.Actor{
-	ID:      "mememe",
-	Hashtag: "#もこ田めめめ",
-	Name:    "もこ田めめめ",
+	ID:                "mememe",
+	Hashtag:           "#もこ田めめめ",
+	Name:              "もこ田めめめ",
+	TwitterScreenName: "test-mememe",
+	Emoji:             "🐏",
 }
 
 // Siro .
 var Siro = model.Actor{
-	ID:      "siro",
-	Hashtag: "#シロ生放送",
-	Name:    "電脳少女シロ",
+	ID:                "siro",
+	Hashtag:           "#シロ生放送",
+	Name:              "電脳少女シロ",
+	TwitterScreenName: "test-siro",
+	Emoji:             "🐬",
 }
 
 // Milk .
 var Milk = model.Actor{
-	ID:      "milk",
-	Hashtag: "#メリーミルク",
-	Name:    "メリーミルク",
+	ID:                "milk",
+	Hashtag:           "#メリーミルク",
+	Name:              "メリーミルク",
+	TwitterScreenName: "test-milk",
+	Emoji:             "🐑",
 }
 
 // All .

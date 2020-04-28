@@ -61,7 +61,9 @@ func pushNotifyLatestPlan(ctx context.Context, c *firestore.Client, msgCli *mess
 	}
 }
 
-func pushNotifyVideo(ctx context.Context, c *firestore.Client, msgCli *messaging.Client, actors model.ActorSlice) {
+type markVideoAsNotifiedFunc func(ctx context.Context, video model.Video) (model.Video, bool, error)
+
+func pushNotifyVideo(ctx context.Context, c *firestore.Client, msgCli notify.Client, actors model.ActorSlice) {
 	now := jst.Now()
 	r := jst.Range{
 		Begin: now.AddDay(-2),
@@ -81,6 +83,12 @@ func pushNotifyVideo(ctx context.Context, c *firestore.Client, msgCli *messaging
 		return
 	}
 
+	pushNotifyVideoInternal(ctx, msgCli, plans, videos, actors, now, func(ctx context.Context, v model.Video) (model.Video, bool, error) {
+		return store.MarkVideoAsNotified(ctx, c, v)
+	})
+}
+
+func pushNotifyVideoInternal(ctx context.Context, msgCli notify.Client, plans []model.Plan, videos []model.Video, actors model.ActorSlice, now jst.Time, markAsNotified markVideoAsNotifiedFunc) {
 	// 現在時間より2時間前の場合は古いので通知しない
 	notifyLimit := now.Add(-2 * time.Hour)
 
@@ -91,6 +99,8 @@ func pushNotifyVideo(ctx context.Context, c *firestore.Client, msgCli *messaging
 	for _, v := range videos {
 		isPlanned := false
 		startAt := v.StartAt
+		var targetPlan model.Plan
+		collaboID := 0
 
 		for _, p := range plans {
 			e, err := p.GetEntry(v)
@@ -100,11 +110,14 @@ func pushNotifyVideo(ctx context.Context, c *firestore.Client, msgCli *messaging
 
 			// Entryが見つかった場合は計画配信
 			isPlanned = true
+			targetPlan = p
 
 			// Bilibiliの場合は開始時刻を正しく取得できないので開始時刻に補正する
 			if v.Source == model.VideoSourceBilibili {
 				startAt = e.StartAt
 			}
+
+			collaboID = e.CollaboID
 
 			break
 		}
@@ -114,7 +127,7 @@ func pushNotifyVideo(ctx context.Context, c *firestore.Client, msgCli *messaging
 			continue
 		}
 
-		v, updated, err := store.MarkVideoAsNotified(ctx, c, v)
+		v, updated, err := markAsNotified(ctx, v)
 		if err != nil {
 			log.Printf("Can not mark video as notified: %v", err)
 			continue
@@ -142,14 +155,32 @@ func pushNotifyVideo(ctx context.Context, c *firestore.Client, msgCli *messaging
 			isPlanned = true
 		}
 
-		actor, err := actors.FindActor(v.ActorID)
-		if err != nil {
-			log.Printf("Unknown actor %v", actor.ID)
-			continue
+		var relatedActors []model.Actor
+		if collaboID > 0 {
+			for _, e := range targetPlan.Entries {
+				if e.CollaboID != collaboID {
+					continue
+				}
+				actor, err := actors.FindActor(e.ActorID)
+				if err != nil {
+					log.Printf("Unknown actor %v", actor.ID)
+					continue
+				}
+
+				relatedActors = append(relatedActors, actor)
+			}
+		} else {
+			actor, err := actors.FindActor(v.ActorID)
+			if err != nil {
+				log.Printf("Unknown actor %v", actor.ID)
+				continue
+			}
+
+			relatedActors = append(relatedActors, actor)
 		}
 
-		log.Printf("push notify video: %v, %v, isPlanned:%v, isLive:%v", v.ID, v.Text, isPlanned, v.IsLive)
-		err = notify.PushNotifyVideo(ctx, msgCli, v, actor)
+		log.Printf("push notify video: %v, %v, isPlanned:%v, isLive:%v isColalbo:%v", v.ID, v.Text, isPlanned, v.IsLive, collaboID > 0)
+		err = notify.PushNotifyVideo(ctx, msgCli, v, relatedActors)
 		if err != nil {
 			log.Printf("Can not send push notification: %v", err)
 			return

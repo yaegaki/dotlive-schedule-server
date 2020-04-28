@@ -6,33 +6,22 @@ import (
 
 	"firebase.google.com/go/messaging"
 	. "github.com/yaegaki/dotlive-schedule-server/internal/testutil/actor"
+	. "github.com/yaegaki/dotlive-schedule-server/internal/testutil/notify"
 	. "github.com/yaegaki/dotlive-schedule-server/internal/testutil/plan"
 	"github.com/yaegaki/dotlive-schedule-server/jst"
 )
 
-type client struct {
-	t         *testing.T
-	m         *messaging.Message
-	condition bool
-}
-
-func (c client) Send(ctx context.Context, message *messaging.Message) (string, error) {
-	if c.condition {
-		if message.Condition != c.m.Condition {
-			c.t.Errorf("condition, got: %v expect: %v", message.Condition, c.m.Condition)
-		}
-	} else {
-		if message.Topic != c.m.Topic {
-			c.t.Errorf("topic, got: %v expect: %v", message.Topic, c.m.Topic)
-		}
+func comparePlanMessage(t *testing.T, got *messaging.Message, expect *messaging.Message) (string, error) {
+	if got.Topic != expect.Topic {
+		t.Errorf("topic, got: %v expect: %v", got.Topic, expect.Topic)
 	}
 
-	if message.Notification.Title != c.m.Notification.Title {
-		c.t.Errorf("title, got: %v expect: %v", message.Notification.Title, c.m.Notification.Title)
+	if got.Notification.Title != expect.Notification.Title {
+		t.Errorf("title, got: %v expect: %v", got.Notification.Title, expect.Notification.Title)
 	}
 
-	if message.Notification.Body != c.m.Notification.Body {
-		c.t.Errorf("body, got: %v expect: %v", message.Notification.Body, c.m.Notification.Body)
+	if got.Notification.Body != expect.Notification.Body {
+		t.Errorf("body, got: %v expect: %v", got.Notification.Body, expect.Notification.Body)
 	}
 
 	return "", nil
@@ -42,7 +31,6 @@ func TestNotifyPlan(t *testing.T) {
 	tests := []struct {
 		date  jst.Time
 		parts []EntryPart
-		topic string
 		title string
 		body  string
 	}{
@@ -52,14 +40,12 @@ func TestNotifyPlan(t *testing.T) {
 				CreateEntryPartBilibili(Siro, 19, 0),
 				CreateEntryPart(Suzu, 22, 0),
 			},
-			"plan",
 			"生放送スケジュール4月24日",
 			"19:00~:#シロ生放送(bilibili)\n22:00~:#神楽すず",
 		},
 		{
 			jst.ShortDate(2099, 4, 1),
 			[]EntryPart{},
-			"plan",
 			"生放送スケジュール4月1日",
 			"なし",
 		},
@@ -69,7 +55,6 @@ func TestNotifyPlan(t *testing.T) {
 				CreateEntryPart(Siro, 19, 0),
 				CreateEntryPart(Suzu, 22, 0),
 			},
-			"plan",
 			"生放送スケジュール4月2日",
 			"19:00~:#シロ生放送\n22:00~:#神楽すず",
 		},
@@ -79,13 +64,16 @@ func TestNotifyPlan(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.title, func(t *testing.T) {
-			cli := client{
-				t: t,
-				m: createMessage(tt.topic, tt.title, tt.body),
-			}
+			cli := &TestNotifyClient{}
 
 			PushNotifyPlan(ctx, cli, CreatePlan(tt.date, tt.parts), All)
+			if len(cli.Messages) != 1 {
+				t.Errorf("inavalid len(cli.Messages), got: %v", len(cli.Messages))
+				return
+			}
+
+			expect := createMessage("plan", tt.title, tt.body)
+			comparePlanMessage(t, cli.Messages[0], expect)
 		})
 	}
-
 }
