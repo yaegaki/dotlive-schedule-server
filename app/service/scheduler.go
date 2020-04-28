@@ -71,6 +71,13 @@ func createScheduleInternal(date jst.Time, plans []model.Plan, videos []model.Vi
 	scheduleRange.End = scheduleRange.End.Add(30 * time.Minute)
 	entries := []model.ScheduleEntry{}
 	var addedPlanEntries []model.PlanEntry
+	var addedCollaboEntries []model.ScheduleEntry
+
+	// 開始順にソートする
+	videos = append([]model.Video{}, videos...)
+	sort.Slice(videos, func(i, j int) bool {
+		return videos[i].StartAt.Before(videos[j].StartAt)
+	})
 
 	for _, v := range videos {
 		yesterdayPlanned := false
@@ -95,9 +102,19 @@ func createScheduleInternal(date jst.Time, plans []model.Plan, videos []model.Vi
 		pe, err := targetPlan.GetEntry(v)
 		if err == nil {
 			isPlanned = true
+			found := false
+			for _, temp := range addedPlanEntries {
+				if temp.ActorID == v.ActorID && pe.StartAt.Equal(temp.StartAt) {
+					found = true
+					break
+				}
+			}
+
 			// 計画されている場合はその時間に合わせる
-			// 枠取り直した場合などは同じ時間が記録されるが許容する
-			startAt = pe.StartAt
+			// ただし、既にその計画に対してエントリが追加されている場合は時間を補正しない
+			if !found {
+				startAt = pe.StartAt
+			}
 			addedPlanEntries = append(addedPlanEntries, pe)
 		} else {
 			isPlanned = false
@@ -147,8 +164,13 @@ func createScheduleInternal(date jst.Time, plans []model.Plan, videos []model.Vi
 			URL:       v.URL,
 			VideoID:   v.ID,
 			Source:    v.Source,
+			CollaboID: pe.CollaboID,
 		}
 		entries = append(entries, se)
+
+		if se.CollaboID > 0 {
+			addedCollaboEntries = append(addedCollaboEntries, se)
+		}
 	}
 
 	for _, e := range targetPlan.Entries {
@@ -176,8 +198,29 @@ func createScheduleInternal(date jst.Time, plans []model.Plan, videos []model.Vi
 			StartAt:   e.StartAt,
 			Planned:   true,
 			Source:    e.Source,
+			CollaboID: e.CollaboID,
 		}
 		entries = append(entries, se)
+	}
+
+	// コラボの場合はチャンネル主のエントリで他の人のエントリを上書きする
+	// 複数チャンネルで行っているコラボの場合はツイートのタイミング次第で
+	// エントリの内容が変わる可能性があるが許容する
+	for _, se := range addedCollaboEntries {
+		for i, target := range entries {
+			if target.CollaboID != se.CollaboID {
+				continue
+			}
+
+			if target.VideoID != "" {
+				continue
+			}
+
+			temp := se
+			temp.ActorName = target.ActorName
+			temp.Icon = target.Icon
+			entries[i] = temp
+		}
 	}
 
 	sort.Slice(entries, func(i, j int) bool {

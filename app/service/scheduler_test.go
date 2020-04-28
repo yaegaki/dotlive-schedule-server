@@ -1,6 +1,8 @@
 package service
 
 import (
+	"sort"
+	"strings"
 	"testing"
 
 	. "github.com/yaegaki/dotlive-schedule-server/internal/testutil/actor"
@@ -93,6 +95,29 @@ func TestCreateScheduleInternal(t *testing.T) {
 				createScheduleEntryPart(Pino.Name, true, "2020-4-23-22-0-pino", 22, 0),
 			}),
 		},
+		{
+			"2020/4/19",
+			jst.Range{
+				Begin: jst.ShortDate(2020, 4, 18),
+				End:   jst.Date(2020, 4, 19, 23, 59),
+			},
+			jst.Range{
+				Begin: jst.ShortDate(2020, 4, 18),
+				End:   jst.Date(2020, 4, 19, 23, 59),
+			},
+			createScheduleForTest(jst.ShortDate(2020, 4, 19), []scheduleEntryPart{
+				createScheduleEntryPartCollabo(Chieri.Name, true, "2020-4-19-20-0-collabo", 20, 0, 1),
+				createScheduleEntryPartCollabo(Pino.Name, true, "2020-4-19-20-0-collabo", 20, 0, 1),
+				createScheduleEntryPartCollabo(Iroha.Name, true, "2020-4-19-20-0-collabo", 20, 0, 1),
+				createScheduleEntryPartCollabo(Mememe.Name, true, "2020-4-19-20-0-collabo", 20, 0, 1),
+				createScheduleEntryPart(Chieri.Name, false, "2020-4-19-20-39-collabo", 20, 39),
+				// 30分ずれたらゲリラ扱いになるのでコラボ認識されない
+				// createScheduleEntryPart(Pino.Name, false, "2020-4-19-20-39-collabo", 20, 39),
+				// createScheduleEntryPart(Iroha.Name, false, "2020-4-19-20-39-collabo", 20, 39),
+				// createScheduleEntryPart(Mememe.Name, false, "2020-4-19-20-39-collabo", 20, 39),
+				createScheduleEntryPart(Suzu.Name, true, "2020-4-19-22-0-suzu", 22, 0),
+			}),
+		},
 	}
 
 	for _, tt := range tests {
@@ -105,10 +130,64 @@ func TestCreateScheduleInternal(t *testing.T) {
 			compareSchedule(t, s, tt.schedule)
 		})
 	}
+
+	// 特殊ケースのテスト
+
+	// コラボ関連
+	t.Run("Collabo", func(t *testing.T) {
+		d := jst.ShortDate(2020, 4, 29)
+		p := CreatePlan(d, []EntryPart{
+			CreateEntryPartCollabo(Iori, 20, 0, 1),
+			CreateEntryPartCollabo(Suzu, 20, 0, 1),
+			CreateEntryPartCollabo(Pino, 22, 0, 2),
+			CreateEntryPartCollabo(Iroha, 22, 0, 2),
+		})
+		vs := []model.Video{
+			model.Video{
+				ID:      "iosu-1",
+				ActorID: Iori.ID,
+				Source:  model.VideoSourceYoutube,
+				StartAt: jst.Date(2020, 4, 29, 20, 0),
+			},
+			model.Video{
+				ID:      "iosu-2",
+				ActorID: Iori.ID,
+				Source:  model.VideoSourceYoutube,
+				StartAt: jst.Date(2020, 4, 29, 20, 15),
+			},
+			model.Video{
+				ID:      "pinogon",
+				ActorID: Pino.ID,
+				Source:  model.VideoSourceYoutube,
+				StartAt: jst.Date(2020, 4, 29, 22, 0),
+			},
+		}
+		s, err := createScheduleInternal(d, []model.Plan{p}, vs, All)
+		if err != nil {
+			t.Errorf("can not create schedule: %v", err)
+			return
+		}
+		// 枠取り直した場合はチャンネル主のエントリだけ作られている
+		// 2つ以上のコラボがあったときに正しく処理されている
+		compareSchedule(t, s, createScheduleForTest(jst.ShortDate(2020, 4, 29), []scheduleEntryPart{
+			createScheduleEntryPartCollabo(Iori.Name, true, "iosu-1", 20, 0, 1),
+			createScheduleEntryPartCollabo(Suzu.Name, true, "iosu-1", 20, 0, 1),
+			createScheduleEntryPartCollabo(Iori.Name, true, "iosu-2", 20, 15, 1),
+			createScheduleEntryPartCollabo(Pino.Name, true, "pinogon", 22, 0, 2),
+			createScheduleEntryPartCollabo(Iroha.Name, true, "pinogon", 22, 0, 2),
+		}))
+	})
 }
 
 func getPlans(r jst.Range) []model.Plan {
 	plans := []model.Plan{
+		CreatePlan(jst.ShortDate(2020, 4, 19), []EntryPart{
+			CreateEntryPartCollabo(Chieri, 20, 0, 1),
+			CreateEntryPartCollabo(Pino, 20, 0, 1),
+			CreateEntryPartCollabo(Iroha, 20, 0, 1),
+			CreateEntryPartCollabo(Mememe, 20, 0, 1),
+			CreateEntryPart(Suzu, 22, 0),
+		}),
 		CreatePlan(jst.ShortDate(2020, 4, 23), []EntryPart{
 			CreateEntryPart(Natori, 18, 30),
 			CreateEntryPart(Siro, 20, 0),
@@ -141,6 +220,24 @@ func getPlans(r jst.Range) []model.Plan {
 
 func getVideos(r jst.Range) []model.Video {
 	videos := []model.Video{
+		{
+			ID:      "2020-4-19-20-0-collabo",
+			ActorID: Chieri.ID,
+			Source:  model.VideoSourceYoutube,
+			StartAt: jst.Date(2020, 4, 19, 20, 0),
+		},
+		{
+			ID:      "2020-4-19-20-39-collabo",
+			ActorID: Chieri.ID,
+			Source:  model.VideoSourceYoutube,
+			StartAt: jst.Date(2020, 4, 19, 20, 39),
+		},
+		{
+			ID:      "2020-4-19-22-0-suzu",
+			ActorID: Suzu.ID,
+			Source:  model.VideoSourceYoutube,
+			StartAt: jst.Date(2020, 4, 19, 22, 0),
+		},
 		{
 			ID:      "2020-4-23-4-5-futaba",
 			ActorID: Futaba.ID,
@@ -214,8 +311,24 @@ func compareSchedule(t *testing.T, got model.Schedule, expect model.Schedule) {
 		return
 	}
 
-	for i, e := range got.Entries {
-		expectEntry := expect.Entries[i]
+	createSortedEntries := func(entries []model.ScheduleEntry) []model.ScheduleEntry {
+		c := append([]model.ScheduleEntry{}, entries...)
+		sort.Slice(c, func(i, j int) bool {
+			if c[i].StartAt.Equal(c[j].StartAt) {
+				// 開始時間が同じ場合は名前順
+				return strings.Compare(c[i].ActorName, c[j].ActorName) < 0
+			}
+
+			// 開始時間でソート
+			return c[i].StartAt.Before(c[j].StartAt)
+		})
+		return c
+	}
+
+	expectEntries := createSortedEntries(expect.Entries)
+
+	for i, e := range createSortedEntries(got.Entries) {
+		expectEntry := expectEntries[i]
 		if e.ActorName != expectEntry.ActorName {
 			t.Errorf("ActorName, got: %v expect: %v", e.ActorName, expectEntry.ActorName)
 			continue
@@ -236,16 +349,21 @@ func compareSchedule(t *testing.T, got model.Schedule, expect model.Schedule) {
 		if e.Source != expectEntry.Source {
 			t.Errorf("Source, got: %v expect: %v", e.Source, expectEntry.Source)
 		}
+
+		if e.CollaboID != expectEntry.CollaboID {
+			t.Errorf("CollaboID, got: %v expect: %v", e.CollaboID, expectEntry.CollaboID)
+		}
 	}
 }
 
 type scheduleEntryPart struct {
-	name    string
-	planned bool
-	videoID string
-	source  string
-	hour    int
-	min     int
+	name      string
+	planned   bool
+	videoID   string
+	source    string
+	hour      int
+	min       int
+	collaboID int
 }
 
 func createScheduleEntryPart(name string, planned bool, videoID string, hour, min int) scheduleEntryPart {
@@ -256,6 +374,18 @@ func createScheduleEntryPart(name string, planned bool, videoID string, hour, mi
 		source:  model.VideoSourceYoutube,
 		hour:    hour,
 		min:     min,
+	}
+}
+
+func createScheduleEntryPartCollabo(name string, planned bool, videoID string, hour, min int, collaboID int) scheduleEntryPart {
+	return scheduleEntryPart{
+		name:      name,
+		planned:   planned,
+		videoID:   videoID,
+		source:    model.VideoSourceYoutube,
+		hour:      hour,
+		min:       min,
+		collaboID: collaboID,
 	}
 }
 
@@ -279,6 +409,7 @@ func createScheduleForTest(d jst.Time, parts []scheduleEntryPart) model.Schedule
 			StartAt:   jst.Date(d.Year(), d.Month(), d.Day(), p.hour, p.min),
 			VideoID:   p.videoID,
 			Source:    p.source,
+			CollaboID: p.collaboID,
 		})
 	}
 

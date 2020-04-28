@@ -33,6 +33,8 @@ type planEntry struct {
 	StartAt time.Time `firestore:"startAt"`
 	// Source 配信サイト
 	Source string `firestore:"source"`
+	// CollaboID コラボID
+	CollaboID int `firestore:"collaboID"`
 }
 
 const collectionNamePlan = "Plan"
@@ -153,9 +155,10 @@ func fromPlan(p model.Plan) plan {
 	var entries planEntrySlice
 	for _, e := range p.Entries {
 		entries = append(entries, planEntry{
-			ActorID: e.ActorID,
-			StartAt: e.StartAt.Time(),
-			Source:  e.Source,
+			ActorID:   e.ActorID,
+			StartAt:   e.StartAt.Time(),
+			Source:    e.Source,
+			CollaboID: e.CollaboID,
 		})
 	}
 	return plan{
@@ -185,8 +188,9 @@ func (es planEntrySlice) PlanEntries() []model.PlanEntry {
 
 func (e planEntry) PlanEntry() model.PlanEntry {
 	return model.PlanEntry{
-		ActorID: e.ActorID,
-		StartAt: jst.From(e.StartAt),
-		Source:  e.Source,
+		ActorID:   e.ActorID,
+		StartAt:   jst.From(e.StartAt),
+		Source:    e.Source,
+		CollaboID: e.CollaboID,
 	}
 }

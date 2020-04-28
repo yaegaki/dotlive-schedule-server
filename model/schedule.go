@@ -29,4 +29,6 @@ type ScheduleEntry struct {
 	IsLive bool `json:"isLive"`
 	// Text 説明
 	Text string `json:"text"`
+	// CollaboID コラボID
+	CollaboID int `json:"collaboId"`
 }

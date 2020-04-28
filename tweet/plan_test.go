@@ -1,6 +1,8 @@
 package tweet
 
 import (
+	"sort"
+	"strings"
 	"testing"
 
 	. "github.com/yaegaki/dotlive-schedule-server/internal/testutil/actor"
@@ -101,6 +103,27 @@ http://vrlive.party/member/
 			},
 		},
 		{
+			"2020/4/19",
+			jst.ShortDate(2020, 4, 18),
+			`【どっとライブ】【アイドル部】
+【生放送スケジュール4月19日】
+
+20:00~: #花京院ちえり × #カルロピノ × #金剛いろは × #もこ田めめめ
+22:00~: #神楽すず
+
+メンバーの動画、SNSのリンクはこちらから！
+http://vrlive.party/member/
+
+#アイドル部　#どっとライブ`,
+			[]EntryPart{
+				CreateEntryPartCollabo(Chieri, 20, 00, 1),
+				CreateEntryPartCollabo(Pino, 20, 00, 1),
+				CreateEntryPartCollabo(Iroha, 20, 00, 1),
+				CreateEntryPartCollabo(Mememe, 20, 00, 1),
+				CreateEntryPart(Suzu, 22, 00),
+			},
+		},
+		{
 			"Empty",
 			jst.ShortDate(2090, 4, 1),
 			`【どっとライブ】【アイドル部】
@@ -145,8 +168,24 @@ func comparePlan(t *testing.T, tweet Tweet, expect model.Plan) {
 		t.Errorf("different entry, got: %v expect: %v", len(p.Entries), len(expect.Entries))
 	}
 
-	for i, e := range p.Entries {
-		expectEntry := expect.Entries[i]
+	createSortedEntries := func(entries []model.PlanEntry) []model.PlanEntry {
+		c := append([]model.PlanEntry{}, entries...)
+		sort.Slice(c, func(i, j int) bool {
+			if c[i].StartAt.Equal(c[j].StartAt) {
+				// 開始時間が同じ場合はid順
+				return strings.Compare(c[i].ActorID, c[j].ActorID) < 0
+			}
+
+			// 開始時間でソート
+			return c[i].StartAt.Before(c[j].StartAt)
+		})
+		return c
+	}
+
+	expectEntries := createSortedEntries(expect.Entries)
+
+	for i, e := range createSortedEntries(p.Entries) {
+		expectEntry := expectEntries[i]
 
 		if e.ActorID != expectEntry.ActorID {
 			t.Errorf("invalid ActorID, got: %v expect: %v", e.ActorID, expectEntry.ActorID)
@@ -161,6 +200,10 @@ func comparePlan(t *testing.T, tweet Tweet, expect model.Plan) {
 		if e.Source != expectEntry.Source {
 			t.Errorf("Invalid source, got: %v expect: %v", e.Source, expectEntry.Source)
 			continue
+		}
+
+		if e.CollaboID != expectEntry.CollaboID {
+			t.Errorf("invalid CollaboID, got: %v expect: %v", e.CollaboID, expectEntry.CollaboID)
 		}
 	}
 }
