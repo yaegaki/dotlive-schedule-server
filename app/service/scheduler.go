@@ -31,7 +31,12 @@ func CreateSchedule(ctx context.Context, c *firestore.Client, date jst.Time, act
 	}
 
 	videos, err := store.FindVideos(ctx, c, r)
-	return createScheduleInternal(date.FloorToDay(), plans, videos, actors)
+	if err != nil && err != common.ErrNotFound {
+		return model.Schedule{}, err
+	}
+
+	s := createScheduleInternal(date.FloorToDay(), plans, videos, actors)
+	return s, nil
 }
 
 func createEmptySchedule(date jst.Time) model.Schedule {
@@ -41,7 +46,7 @@ func createEmptySchedule(date jst.Time) model.Schedule {
 	}
 }
 
-func createScheduleInternal(date jst.Time, plans []model.Plan, videos []model.Video, actors []model.Actor) (model.Schedule, error) {
+func createScheduleInternal(date jst.Time, plans []model.Plan, videos []model.Video, actors []model.Actor) model.Schedule {
 	var targetPlan model.Plan
 	found := false
 	for _, p := range plans {
@@ -53,7 +58,7 @@ func createScheduleInternal(date jst.Time, plans []model.Plan, videos []model.Vi
 	}
 
 	if !found {
-		return createEmptySchedule(date), nil
+		return createEmptySchedule(date)
 	}
 
 	scheduleRange := jst.Range{
@@ -230,7 +235,7 @@ func createScheduleInternal(date jst.Time, plans []model.Plan, videos []model.Vi
 	return model.Schedule{
 		Date:    targetPlan.Date,
 		Entries: entries,
-	}, nil
+	}
 }
 
 func findActorByID(actors []model.Actor, id string) (model.Actor, error) {

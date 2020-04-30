@@ -32,7 +32,7 @@ type actor struct {
 const collectionNameActor = "Actor"
 
 // FindActors 配信者を検索する
-func FindActors(ctx context.Context, c *firestore.Client) ([]model.Actor, error) {
+func FindActors(ctx context.Context, c *firestore.Client) (model.ActorSlice, error) {
 	it := c.Collection(collectionNameActor).Documents(ctx)
 	docs, err := it.GetAll()
 	if err != nil {

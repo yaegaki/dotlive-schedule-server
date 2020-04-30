@@ -37,3 +37,14 @@ func (s ActorSlice) FindActor(id string) (Actor, error) {
 
 	return Actor{}, common.ErrNotFound
 }
+
+// FindActorByName 配信者を探す
+func (s ActorSlice) FindActorByName(name string) (Actor, error) {
+	for _, a := range s {
+		if a.Name == name {
+			return a, nil
+		}
+	}
+
+	return Actor{}, common.ErrNotFound
+}
