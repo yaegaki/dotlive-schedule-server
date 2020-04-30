@@ -6,6 +6,7 @@ import (
 	"log"
 	"strings"
 
+	"github.com/yaegaki/dotlive-schedule-server/jst"
 	"github.com/yaegaki/dotlive-schedule-server/model"
 )
 
@@ -22,6 +23,18 @@ func PushNotifyPlan(ctx context.Context, cli Client, p model.Plan, actors model.
 
 func createNotifyPlanBody(p model.Plan, actors model.ActorSlice) string {
 	var lines []string
+	lastCollaboID := 0
+	var collaboActors []string
+	var lastCollaboEntry model.PlanEntry
+	addCollaboToLines := func() {
+		t := strings.Join(collaboActors, " x ")
+		l := formatPlanEntry(lastCollaboEntry.StartAt, t, lastCollaboEntry.Source)
+		lines = append(lines, l)
+		lastCollaboID = 0
+		collaboActors = nil
+		lastCollaboEntry = model.PlanEntry{}
+	}
+
 	for _, e := range p.Entries {
 		a, err := actors.FindActor(e.ActorID)
 		if err != nil {
@@ -29,7 +42,24 @@ func createNotifyPlanBody(p model.Plan, actors model.ActorSlice) string {
 			continue
 		}
 
-		lines = append(lines, formatPlanEntry(e, a))
+		if lastCollaboID > 0 {
+			if e.CollaboID != lastCollaboID {
+				addCollaboToLines()
+			}
+		}
+
+		if e.CollaboID > 0 {
+			lastCollaboID = e.CollaboID
+			lastCollaboEntry = e
+			collaboActors = append(collaboActors, a.Hashtag)
+			continue
+		}
+
+		lines = append(lines, formatPlanEntry(e.StartAt, a.Hashtag, e.Source))
+	}
+
+	if lastCollaboID > 0 {
+		addCollaboToLines()
 	}
 
 	if len(lines) == 0 {
@@ -39,9 +69,9 @@ func createNotifyPlanBody(p model.Plan, actors model.ActorSlice) string {
 	return strings.Join(lines, "\n")
 }
 
-func formatPlanEntry(e model.PlanEntry, a model.Actor) string {
-	s := fmt.Sprintf("%02d:%02d~:%v", e.StartAt.Hour(), e.StartAt.Minute(), a.Hashtag)
-	if e.Source == model.VideoSourceBilibili {
+func formatPlanEntry(startAt jst.Time, hashtag, source string) string {
+	s := fmt.Sprintf("%02d:%02d~:%v", startAt.Hour(), startAt.Minute(), hashtag)
+	if source == model.VideoSourceBilibili {
 		s = s + "(bilibili)"
 	}
 	return s

@@ -35,6 +35,34 @@ func TestNotifyPlan(t *testing.T) {
 		body  string
 	}{
 		{
+			jst.ShortDate(2020, 4, 19),
+			[]EntryPart{
+				CreateEntryPartCollabo(Chieri, 20, 0, 1),
+				CreateEntryPartCollabo(Pino, 20, 0, 1),
+				CreateEntryPartCollabo(Iroha, 20, 0, 1),
+				CreateEntryPartCollabo(Mememe, 20, 0, 1),
+				CreateEntryPart(Suzu, 22, 0),
+			},
+			"生放送スケジュール4月19日",
+			"20:00~:#花京院ちえり x #カルロピノ x #金剛いろは x #もこ田めめめ\n22:00~:#神楽すず",
+		},
+		{
+			jst.ShortDate(2099, 4, 19),
+			[]EntryPart{
+				CreateEntryPartCollabo(Chieri, 20, 0, 1),
+				CreateEntryPartCollabo(Pino, 20, 0, 1),
+				CreateEntryPartCollabo(Iori, 20, 0, 2),
+				CreateEntryPartCollabo(Suzu, 20, 0, 2),
+				CreateEntryPartCollabo(Mememe, 21, 0, 3),
+				CreateEntryPartCollabo(Iroha, 21, 0, 3),
+				CreateEntryPart(Suzu, 22, 0),
+				CreateEntryPartCollabo(Mememe, 23, 0, 4),
+				CreateEntryPartCollabo(Iroha, 23, 0, 4),
+			},
+			"生放送スケジュール4月19日",
+			"20:00~:#花京院ちえり x #カルロピノ\n20:00~:#ヤマトイオリ x #神楽すず\n21:00~:#もこ田めめめ x #金剛いろは\n22:00~:#神楽すず\n23:00~:#もこ田めめめ x #金剛いろは",
+		},
+		{
 			jst.ShortDate(2020, 4, 24),
 			[]EntryPart{
 				CreateEntryPartBilibili(Siro, 19, 0),
