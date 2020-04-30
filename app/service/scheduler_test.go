@@ -122,11 +122,7 @@ func TestCreateScheduleInternal(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s, err := createScheduleInternal(tt.schedule.Date, getPlans(tt.planRange), getVideos(tt.videoRange), All)
-			if err != nil {
-				t.Errorf("can not create schedule: %v", err)
-				return
-			}
+			s := createScheduleInternal(tt.schedule.Date, getPlans(tt.planRange), getVideos(tt.videoRange), All)
 			compareSchedule(t, s, tt.schedule)
 		})
 	}
@@ -162,11 +158,7 @@ func TestCreateScheduleInternal(t *testing.T) {
 				StartAt: jst.Date(2020, 4, 29, 22, 0),
 			},
 		}
-		s, err := createScheduleInternal(d, []model.Plan{p}, vs, All)
-		if err != nil {
-			t.Errorf("can not create schedule: %v", err)
-			return
-		}
+		s := createScheduleInternal(d, []model.Plan{p}, vs, All)
 		// 枠取り直した場合はチャンネル主のエントリだけ作られている
 		// 2つ以上のコラボがあったときに正しく処理されている
 		compareSchedule(t, s, createScheduleForTest(jst.ShortDate(2020, 4, 29), []scheduleEntryPart{
