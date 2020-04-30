@@ -2,7 +2,6 @@ package handler
 
 import (
 	"net/http"
-	"strconv"
 
 	"cloud.google.com/go/firestore"
 	"github.com/labstack/echo/v4"
@@ -21,14 +20,16 @@ func calendarHandler(c echo.Context) error {
 	ctx := c.Request().Context()
 
 	query := c.Request().URL.Query()
-	s := query.Get("s")
-	skip := 0
-	if s != "" {
-		temp, err := strconv.Atoi(s)
-		if err == nil && temp > 0 && temp < 32 {
-			skip = temp
+	now := jst.Now()
+	baseDate := jst.ShortDate(now.Year(), now.Month(), 1)
+	q := query.Get("q")
+	if q != "" {
+		temp, err := parseYearMonthDayQuery(q)
+		if err == nil {
+			baseDate = temp
 		}
 	}
+
 	client, err := firestore.NewClient(ctx, "dotlive-schedule")
 	if err != nil {
 		return c.String(http.StatusInternalServerError, "error1")
@@ -39,7 +40,7 @@ func calendarHandler(c echo.Context) error {
 		return c.String(http.StatusInternalServerError, "error2")
 	}
 
-	calendar, err := service.CreateCalendar(ctx, client, jst.Now(), skip, actors)
+	calendar, err := service.CreateCalendar(ctx, client, baseDate, actors)
 	if err != nil {
 		return c.String(http.StatusInternalServerError, "error3")
 	}

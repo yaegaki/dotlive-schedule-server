@@ -11,12 +11,19 @@ import (
 )
 
 // CreateCalendar カレンダーを作成する
-func CreateCalendar(ctx context.Context, client *firestore.Client, now jst.Time, skip int, actors model.ActorSlice) (model.Calendar, error) {
-	baseDate := jst.ShortDate(now.Year(), now.Month(), 1)
+func CreateCalendar(ctx context.Context, client *firestore.Client, baseDate jst.Time, actors model.ActorSlice) (model.Calendar, error) {
+	// 次の月の初めの日
+	var end jst.Time
+	if baseDate.Month() == 12 {
+		end = jst.ShortDate(baseDate.Year()+1, 1, 1)
+	} else {
+		end = jst.ShortDate(baseDate.Year(), baseDate.Month()+1, 1)
+	}
+
 	r := jst.Range{
-		// スケジュールの作成には前日の計画も必要なので-1する
-		Begin: baseDate.AddDay(skip - 1),
-		End:   now,
+		// スケジュールの作成には前後の情報も必要なので-1/+1する
+		Begin: baseDate.AddDay(-1),
+		End:   end.AddOneDay(),
 	}
 
 	calendar := model.Calendar{
@@ -34,9 +41,9 @@ func CreateCalendar(ctx context.Context, client *firestore.Client, now jst.Time,
 		return model.Calendar{}, err
 	}
 
-	for d := baseDate.AddDay(skip); d.Before(now); d = d.AddOneDay() {
+	for d := baseDate; d.Before(end) && baseDate.Month() == d.Month(); d = d.AddOneDay() {
 		s := createScheduleInternal(d, plans, videos, actors)
-		var entries model.CalendarDayEntrySlice
+		entries := model.CalendarDayEntrySlice{}
 		for _, e := range s.Entries {
 			a, err := actors.FindActorByName(e.ActorName)
 			if err != nil {

@@ -3,9 +3,6 @@ package handler
 import (
 	"encoding/json"
 	"net/http"
-	"strconv"
-	"strings"
-	"time"
 
 	"cloud.google.com/go/firestore"
 	"github.com/labstack/echo/v4"
@@ -32,14 +29,9 @@ func scheduleHandler(c echo.Context) error {
 	now := jst.Now()
 	q := c.Request().URL.Query().Get("q")
 	if q != "" {
-		xs := strings.Split(q, "-")
-		if len(xs) == 3 {
-			year, err1 := strconv.Atoi(xs[0])
-			month, err2 := strconv.Atoi(xs[1])
-			day, err3 := strconv.Atoi(xs[2])
-			if err1 == nil && err2 == nil && err3 == nil {
-				now = jst.ShortDate(year, time.Month(month), day)
-			}
+		temp, err := parseYearMonthDayQuery(q)
+		if err != nil {
+			now = temp
 		}
 	}
 
