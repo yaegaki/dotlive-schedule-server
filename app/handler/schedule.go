@@ -30,7 +30,7 @@ func scheduleHandler(c echo.Context) error {
 	q := c.Request().URL.Query().Get("q")
 	if q != "" {
 		temp, err := parseYearMonthDayQuery(q)
-		if err != nil {
+		if err == nil {
 			now = temp
 		}
 	}
