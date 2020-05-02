@@ -76,6 +76,7 @@ func (pp planParser) parse(t Tweet) (model.Plan, error) {
 			startAt := jst.Date(p.Date.Year(), p.Date.Month(), p.Date.Day(), hour, minute)
 
 			actorCount := 0
+			prevEntryCount := len(p.Entries)
 
 			for _, actor := range pp.actors {
 				if !strings.Contains(line, actor.Hashtag) {
@@ -101,6 +102,10 @@ func (pp planParser) parse(t Tweet) (model.Plan, error) {
 			// コラボ
 			if actorCount > 1 {
 				for i := range p.Entries {
+					if i < prevEntryCount {
+						continue
+					}
+
 					e := p.Entries[i]
 					e.CollaboID = collaboID
 					p.Entries[i] = e

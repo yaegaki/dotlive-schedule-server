@@ -124,6 +124,28 @@ http://vrlive.party/member/
 			},
 		},
 		{
+			"2099/4/19",
+			jst.ShortDate(2099, 4, 18),
+			`【どっとライブ】【アイドル部】
+【生放送スケジュール4月19日】
+
+20:00~: #花京院ちえり × #カルロピノ × #金剛いろは × #もこ田めめめ
+21:00~: #神楽すず x #ヤマトイオリ
+
+メンバーの動画、SNSのリンクはこちらから！
+http://vrlive.party/member/
+
+#アイドル部　#どっとライブ`,
+			[]EntryPart{
+				CreateEntryPartCollabo(Chieri, 20, 00, 1),
+				CreateEntryPartCollabo(Pino, 20, 00, 1),
+				CreateEntryPartCollabo(Iroha, 20, 00, 1),
+				CreateEntryPartCollabo(Mememe, 20, 00, 1),
+				CreateEntryPartCollabo(Suzu, 21, 00, 2),
+				CreateEntryPartCollabo(Iori, 21, 00, 2),
+			},
+		},
+		{
 			"Empty",
 			jst.ShortDate(2090, 4, 1),
 			`【どっとライブ】【アイドル部】
@@ -166,6 +188,7 @@ func comparePlan(t *testing.T, tweet Tweet, expect model.Plan) {
 
 	if len(p.Entries) != len(expect.Entries) {
 		t.Errorf("different entry, got: %v expect: %v", len(p.Entries), len(expect.Entries))
+		return
 	}
 
 	createSortedEntries := func(entries []model.PlanEntry) []model.PlanEntry {
