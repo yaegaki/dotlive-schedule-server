@@ -14,7 +14,7 @@ type Calendar struct {
 type CalendarDay struct {
 	// Day 何日か
 	Day      int      `json:"day"`
-	ActorIDs []string `json:"actorIDs"`
+	ActorIDs []string `json:"actorIds"`
 }
 
 // CalendarDaySlice CalendarDayのスライス
