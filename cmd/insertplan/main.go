@@ -57,6 +57,10 @@ func main() {
 		if err != nil {
 			log.Fatalf("Can not create a plan: %v", err)
 		}
+
+		// このツールで追加する場合は最初から通知済みとする
+		p.Notified = true
+
 		err = store.SavePlanWithExplicitID(ctx, client, p, p.SourceID)
 		if err != nil {
 			log.Fatalf("Can not save plan: %v err: %v", p.SourceID, err)
