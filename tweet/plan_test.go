@@ -11,7 +11,7 @@ import (
 	"github.com/yaegaki/dotlive-schedule-server/model"
 )
 
-func TestPlanParser(t *testing.T) {
+func TestParsePlanText(t *testing.T) {
 	tests := []struct {
 		name      string
 		tweetDate jst.Time
@@ -169,14 +169,37 @@ http://vrlive.party/member/
 			}, CreatePlan(tt.tweetDate.AddOneDay(), tt.parts))
 		})
 	}
+
+	t.Run("strict", func(t *testing.T) {
+		tweet := Tweet{
+			ID:   "temp",
+			Date: jst.ShortDate(2020, 4, 18),
+			Text: `【どっとライブ】【アイドル部】
+【生放送スケジュール4月19日】
+
+20:00~: #ヤマトイオリ x #hoge
+
+メンバーの動画、SNSのリンクはこちらから！
+http://vrlive.party/member/
+
+#アイドル部　#どっとライブ`,
+		}
+
+		_, err := ParsePlanTweet(tweet, All, false)
+		if err != nil {
+			t.Error("can not create plan")
+			return
+		}
+
+		_, err = ParsePlanTweet(tweet, All, true)
+		if err == nil {
+			t.Error("invalid strict mode")
+		}
+	})
 }
 
 func comparePlan(t *testing.T, tweet Tweet, expect model.Plan) {
-	pp := planParser{
-		actors: All,
-	}
-
-	p, err := pp.parse(tweet)
+	p, err := ParsePlanTweet(tweet, All, false)
 	if err != nil {
 		t.Errorf("Can not parse tweet: %v", err)
 		return

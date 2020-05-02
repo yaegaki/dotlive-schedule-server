@@ -11,16 +11,11 @@ import (
 	"golang.org/x/xerrors"
 )
 
-// planParser TweetからPlanを作成するParser
-type planParser struct {
-	actors []model.Actor
-}
-
 const liveScheduleStr = "生放送スケジュール"
 const liveScheduleLayout = "【生放送スケジュール1月2日】"
 
-// parse TweetからPlanを作成する
-func (pp planParser) parse(t Tweet) (model.Plan, error) {
+// ParsePlanTweet TweetからPlanを作成する
+func ParsePlanTweet(t Tweet, actors model.ActorSlice, strict bool) (model.Plan, error) {
 	lines := strings.Split(t.Text, "\n")
 	state := 0
 
@@ -78,7 +73,7 @@ func (pp planParser) parse(t Tweet) (model.Plan, error) {
 			actorCount := 0
 			prevEntryCount := len(p.Entries)
 
-			for _, actor := range pp.actors {
+			for _, actor := range actors {
 				if !strings.Contains(line, actor.Hashtag) {
 					continue
 				}
@@ -97,6 +92,11 @@ func (pp planParser) parse(t Tweet) (model.Plan, error) {
 				})
 
 				actorCount++
+			}
+
+			// strictの場合は知らないハッシュタグがあるとエラー扱い
+			if strict && actorCount != (len(l)-1) {
+				return model.Plan{}, xerrors.Errorf("invalid line: %v", line)
 			}
 
 			// コラボ
@@ -130,13 +130,9 @@ func FindPlans(api *anaconda.TwitterApi, lastTweetID string, actors []model.Acto
 		return nil, xerrors.Errorf("Can not get timeline: %w", err)
 	}
 
-	pp := planParser{
-		actors: actors,
-	}
-
 	plans := []model.Plan{}
 	for _, t := range timeline {
-		p, err := pp.parse(t)
+		p, err := ParsePlanTweet(t, actors, false)
 		if err != nil {
 			continue
 		}
