@@ -105,6 +105,16 @@ func SavePlan(ctx context.Context, c *firestore.Client, p model.Plan) error {
 	})
 }
 
+// SavePlanWithExplicitID 指定したIDで保存する
+func SavePlanWithExplicitID(ctx context.Context, c *firestore.Client, p model.Plan, id string) error {
+	temp := fromPlan(p)
+
+	return c.RunTransaction(ctx, func(ctx context.Context, t *firestore.Transaction) error {
+		_, err := c.Collection(collectionNamePlan).Doc(id).Set(ctx, temp)
+		return err
+	})
+}
+
 // MarkPlanAsNotified 計画を通知済みとする
 // すでに通知済みな場合はなにもしない
 // 更新された場合はtrue、されなかった場合はfalse
