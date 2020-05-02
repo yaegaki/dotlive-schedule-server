@@ -43,22 +43,30 @@ func CreateCalendar(ctx context.Context, client *firestore.Client, baseDate jst.
 
 	for d := baseDate; d.Before(end) && baseDate.Month() == d.Month(); d = d.AddOneDay() {
 		s := createScheduleInternal(d, plans, videos, actors)
-		entries := model.CalendarDayEntrySlice{}
+		actorIDs := []string{}
+	OUTER:
 		for _, e := range s.Entries {
 			a, err := actors.FindActorByName(e.ActorName)
 			if err != nil {
 				continue
 			}
-			entries = append(entries, model.CalendarDayEntry{
-				ActorID: a.ID,
-				Text:    e.Text,
-				URL:     e.URL,
-			})
+
+			for _, id := range actorIDs {
+				if id == a.ID {
+					continue OUTER
+				}
+			}
+
+			actorIDs = append(actorIDs, a.ID)
+		}
+
+		if len(actorIDs) == 0 {
+			continue
 		}
 
 		calendar.Days = append(calendar.Days, model.CalendarDay{
-			Day:     d.Day(),
-			Entries: entries,
+			Day:      d.Day(),
+			ActorIDs: actorIDs,
 		})
 	}
 
