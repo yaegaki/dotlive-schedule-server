@@ -8,6 +8,11 @@ type Calendar struct {
 	BaseDate jst.Time `json:"baseDate"`
 	// Entries エントリー
 	Days CalendarDaySlice `json:"days"`
+	// FixedDay この日以前の日付けは変更されることがない
+	// カレンダーをキャッシュする場合、
+	// FixedDay以前の情報はキャッシュしても変更されないことが保証されるが、
+	// FixedDay以降の情報は更新される可能性がある
+	FixedDay int `json:"fixedDay"`
 }
 
 // CalendarDay カレンダーの1日

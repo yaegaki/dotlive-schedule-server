@@ -40,7 +40,7 @@ func calendarHandler(c echo.Context) error {
 		return c.String(http.StatusInternalServerError, "error2")
 	}
 
-	calendar, err := service.CreateCalendar(ctx, client, baseDate, actors)
+	calendar, err := service.CreateCalendar(ctx, client, baseDate, now, actors)
 	if err != nil {
 		return c.String(http.StatusInternalServerError, "error3")
 	}

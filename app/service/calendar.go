@@ -11,7 +11,7 @@ import (
 )
 
 // CreateCalendar カレンダーを作成する
-func CreateCalendar(ctx context.Context, client *firestore.Client, baseDate jst.Time, actors model.ActorSlice) (model.Calendar, error) {
+func CreateCalendar(ctx context.Context, client *firestore.Client, baseDate jst.Time, now jst.Time, actors model.ActorSlice) (model.Calendar, error) {
 	// 次の月の初めの日
 	var end jst.Time
 	if baseDate.Month() == 12 {
@@ -41,7 +41,14 @@ func CreateCalendar(ctx context.Context, client *firestore.Client, baseDate jst.
 		return model.Calendar{}, err
 	}
 
+	// 2日以上前は確実にFixされている
+	fixedDayLimit := now.AddDay(-2)
+
 	for d := baseDate; baseDate.Month() == d.Month(); d = d.AddOneDay() {
+		if d.Before(fixedDayLimit) {
+			calendar.FixedDay = d.Day()
+		}
+
 		s := createScheduleInternal(d, plans, videos, actors)
 		actorIDs := []string{}
 	OUTER:
