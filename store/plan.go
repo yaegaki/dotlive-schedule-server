@@ -8,6 +8,7 @@ import (
 	"github.com/yaegaki/dotlive-schedule-server/common"
 	"github.com/yaegaki/dotlive-schedule-server/jst"
 	"github.com/yaegaki/dotlive-schedule-server/model"
+	"golang.org/x/xerrors"
 	"google.golang.org/api/iterator"
 )
 
@@ -23,6 +24,8 @@ type plan struct {
 	SourceID string `firestore:"sourceID"`
 	// Notified 通知を行ったかどうか
 	Notified bool `firestore:"notified"`
+	// Fixed 固定化されているかどうか
+	Fixed bool `firestore:"fixed"`
 }
 
 // planEntry 配信スケジュールのエントリ
@@ -38,6 +41,9 @@ type planEntry struct {
 }
 
 const collectionNamePlan = "Plan"
+
+// ErrFixedPlan Fixedされた計画をSavePlanWithExplicitID以外で保存しようとしたときに発生する
+var ErrFixedPlan = xerrors.Errorf("Plan is fixed")
 
 // FindPlans 開始時刻と終了時刻を指定して計画を検索する
 func FindPlans(ctx context.Context, c *firestore.Client, r jst.Range) ([]model.Plan, error) {
@@ -85,8 +91,9 @@ func FindLatestPlan(ctx context.Context, c *firestore.Client) (model.Plan, error
 // Notifiedを更新する場合はMarkPlanAsNotifiedを使用する
 func SavePlan(ctx context.Context, c *firestore.Client, p model.Plan) error {
 	temp := fromPlan(p)
+	fixed := false
 
-	return c.RunTransaction(ctx, func(ctx context.Context, t *firestore.Transaction) error {
+	err := c.RunTransaction(ctx, func(ctx context.Context, t *firestore.Transaction) error {
 		q := c.Collection(collectionNamePlan).Where("date", "==", temp.Date).Limit(1)
 		docs, err := t.Documents(q).GetAll()
 		if err != nil {
@@ -97,12 +104,27 @@ func SavePlan(ctx context.Context, c *firestore.Client, p model.Plan) error {
 		if len(docs) != 0 {
 			var oldPlan plan
 			docs[0].DataTo(&oldPlan)
+			// fixされている場合は保存しない
+			if oldPlan.Fixed {
+				fixed = true
+				return nil
+			}
 			temp.Notified = oldPlan.Notified
 			return t.Set(docs[0].Ref, temp)
 		}
 
 		return t.Set(c.Collection(collectionNamePlan).NewDoc(), temp)
 	})
+
+	if err != nil {
+		return err
+	}
+
+	if fixed {
+		return ErrFixedPlan
+	}
+
+	return nil
 }
 
 // SavePlanWithExplicitID 指定したIDで保存する
@@ -176,6 +198,7 @@ func fromPlan(p model.Plan) plan {
 		Entries:  entries,
 		Notified: p.Notified,
 		SourceID: p.SourceID,
+		Fixed:    p.Fixed,
 	}
 }
 
@@ -185,6 +208,7 @@ func (p plan) Plan() model.Plan {
 		Entries:  p.Entries.PlanEntries(),
 		Notified: p.Notified,
 		SourceID: p.SourceID,
+		Fixed:    p.Fixed,
 	}
 }
 

@@ -60,12 +60,14 @@ func main() {
 
 		// このツールで追加する場合は最初から通知済みとする
 		p.Notified = true
+		// 定期実行ジョブで更新されないようにする
+		p.Fixed = true
 
 		err = store.SavePlanWithExplicitID(ctx, client, p, id)
 		if err != nil {
 			log.Fatalf("Can not save plan: %v err: %v", id, err)
 		}
-		log.Printf("Insert plan: %v", p.SourceID)
+		log.Printf("Insert plan: %v", id)
 	}
 }
 

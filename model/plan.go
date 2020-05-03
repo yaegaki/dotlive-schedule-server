@@ -17,6 +17,9 @@ type Plan struct {
 	Entries []PlanEntry
 	// Notified 通知済みか
 	Notified bool
+	// Fixed 固定化されているか
+	// 固定化されている場合は定期ジョブによって更新されない
+	Fixed bool
 }
 
 // PlanEntry 計画のエントリ

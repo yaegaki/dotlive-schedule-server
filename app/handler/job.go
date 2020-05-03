@@ -83,8 +83,12 @@ func jobHandler(c echo.Context) error {
 
 		err := store.SavePlan(ctx, client, p)
 		if err != nil {
-			log.Printf("Can not save plan %v: %v", p.Date, err)
-			return c.String(http.StatusInternalServerError, "error5")
+			if err == store.ErrFixedPlan {
+				log.Printf("Plan is Fixed: %v", p.Date)
+			} else {
+				log.Printf("Can not save plan %v: %v", p.Date, err)
+				return c.String(http.StatusInternalServerError, "error5")
+			}
 		}
 	}
 
