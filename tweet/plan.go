@@ -124,14 +124,17 @@ func ParsePlanTweet(t Tweet, actors model.ActorSlice, strict bool) (model.Plan, 
 }
 
 // FindPlans どっとライブのアカウントからPlanを取得する
-func FindPlans(api *anaconda.TwitterApi, lastTweetID string, actors []model.Actor) ([]model.Plan, error) {
-	timeline, err := getTimeline(api, ScreenNameDotlive, lastTweetID)
+func FindPlans(api *anaconda.TwitterApi, user model.TwitterUser, actors []model.Actor) (model.TwitterUser, []model.Plan, error) {
+	timeline, err := getTimeline(api, user.ScreenName, user.LastTweetID)
 	if err != nil {
-		return nil, xerrors.Errorf("Can not get timeline: %w", err)
+		return model.TwitterUser{}, nil, xerrors.Errorf("Can not get timeline: %w", err)
 	}
 
 	plans := []model.Plan{}
-	for _, t := range timeline {
+	for i, t := range timeline {
+		if i == 0 {
+			user.LastTweetID = t.ID
+		}
 		p, err := ParsePlanTweet(t, actors, false)
 		if err != nil {
 			continue
@@ -140,5 +143,5 @@ func FindPlans(api *anaconda.TwitterApi, lastTweetID string, actors []model.Acto
 		plans = append(plans, p)
 	}
 
-	return plans, nil
+	return user, plans, nil
 }

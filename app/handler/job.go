@@ -11,7 +11,6 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/yaegaki/dotlive-schedule-server/app/internal"
 	"github.com/yaegaki/dotlive-schedule-server/app/service"
-	"github.com/yaegaki/dotlive-schedule-server/common"
 	"github.com/yaegaki/dotlive-schedule-server/jst"
 	"github.com/yaegaki/dotlive-schedule-server/model"
 	"github.com/yaegaki/dotlive-schedule-server/store"
@@ -54,16 +53,6 @@ func jobHandler(c echo.Context) error {
 		return c.String(http.StatusInternalServerError, "error3")
 	}
 
-	// 最新の計画を取得する
-	plan, err := store.FindLatestPlan(ctx, client)
-
-	if err != nil && err != common.ErrNotFound {
-		log.Printf("Can not get latestplan: %v", err)
-		return c.String(http.StatusInternalServerError, "error4")
-	}
-
-	lastTweetID := plan.SourceID
-
 	api := anaconda.NewTwitterApi("", "")
 
 	// プロフィール画像更新
@@ -71,8 +60,15 @@ func jobHandler(c echo.Context) error {
 		updateProfileImage(ctx, api, client, &a)
 	}
 
+	userDotlive, err := store.FindTwitterUser(ctx, client, tweet.ScreenNameDotlive)
+	if err != nil {
+		log.Printf("Can not get dotlive twitteruser: %v", err)
+		return c.String(http.StatusInternalServerError, "error4")
+	}
+
 	// ツイートから計画を取得する
-	newPlans, err := tweet.FindPlans(api, lastTweetID, actors)
+	lastTweetID := userDotlive.LastTweetID
+	userDotlive, newPlans, err := tweet.FindPlans(api, userDotlive, actors)
 	if err != nil {
 		log.Printf("Can not get plans: %v", err)
 	}
@@ -88,6 +84,17 @@ func jobHandler(c echo.Context) error {
 		err := store.SavePlan(ctx, client, p)
 		if err != nil {
 			log.Printf("Can not save plan %v: %v", p.Date, err)
+			return c.String(http.StatusInternalServerError, "error5")
+		}
+	}
+
+	// TwitterUserの更新
+	// 必ず計画を保存した後に更新する
+	if lastTweetID != userDotlive.LastTweetID {
+		err = store.SaveTwitterUser(ctx, client, userDotlive)
+		if err != nil {
+			log.Printf("Can not save dotlive twitteruser: %v", err)
+			return c.String(http.StatusInternalServerError, "error6")
 		}
 	}
 
