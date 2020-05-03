@@ -41,7 +41,7 @@ func CreateCalendar(ctx context.Context, client *firestore.Client, baseDate jst.
 		return model.Calendar{}, err
 	}
 
-	for d := baseDate; d.Before(end) && baseDate.Month() == d.Month(); d = d.AddOneDay() {
+	for d := baseDate; baseDate.Month() == d.Month(); d = d.AddOneDay() {
 		s := createScheduleInternal(d, plans, videos, actors)
 		actorIDs := []string{}
 	OUTER:
