@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"sort"
 
 	"cloud.google.com/go/firestore"
 	"github.com/yaegaki/dotlive-schedule-server/common"
@@ -63,6 +64,9 @@ func CreateCalendar(ctx context.Context, client *firestore.Client, baseDate jst.
 		if len(actorIDs) == 0 {
 			continue
 		}
+
+		// 毎回同じ並びになるようにID順でソート
+		sort.StringSlice(actorIDs).Sort()
 
 		calendar.Days = append(calendar.Days, model.CalendarDay{
 			Day:      d.Day(),
