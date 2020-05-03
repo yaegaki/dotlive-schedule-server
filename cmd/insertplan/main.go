@@ -53,7 +53,7 @@ func main() {
 	}
 
 	for _, temp := range plans {
-		p, err := temp.Plan(actors)
+		id, p, err := temp.Plan(actors)
 		if err != nil {
 			log.Fatalf("Can not create a plan: %v", err)
 		}
@@ -61,32 +61,35 @@ func main() {
 		// このツールで追加する場合は最初から通知済みとする
 		p.Notified = true
 
-		err = store.SavePlanWithExplicitID(ctx, client, p, p.SourceID)
+		err = store.SavePlanWithExplicitID(ctx, client, p, id)
 		if err != nil {
-			log.Fatalf("Can not save plan: %v err: %v", p.SourceID, err)
+			log.Fatalf("Can not save plan: %v err: %v", id, err)
 		}
 		log.Printf("Insert plan: %v", p.SourceID)
 	}
 }
 
 type plan struct {
+	Source  string   `json:"source"`
 	Date    string   `json:"date"`
 	Entries []string `json:"entries"`
 }
 
-func (p plan) Plan(actors model.ActorSlice) (model.Plan, error) {
+func (p plan) Plan(actors model.ActorSlice) (string, model.Plan, error) {
 	d, err := parseYearMonthDayQuery(p.Date)
 	if err != nil {
-		return model.Plan{}, err
+		return "", model.Plan{}, err
 	}
 
 	text := fmt.Sprintf("【生放送スケジュール%v月%v日】\n", int(d.Month()), d.Day()) + strings.Join(p.Entries, "\n")
+	id := fmt.Sprintf("insertplan-%v", p.Date)
 
-	return tweet.ParsePlanTweet(tweet.Tweet{
-		ID:   fmt.Sprintf("insertplan-%v", p.Date),
+	result, err := tweet.ParsePlanTweet(tweet.Tweet{
+		ID:   p.Source,
 		Text: text,
 		Date: d.AddDay(-1),
 	}, actors, true)
+	return id, result, err
 }
 
 // parseYearMonthDayQuery '2022-2-22'形式の文字列をパースする
