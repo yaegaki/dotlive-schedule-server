@@ -30,6 +30,8 @@ func calendarHandler(c echo.Context) error {
 		}
 	}
 
+	actorOnly := query.Get("t") == "actor"
+
 	client, err := firestore.NewClient(ctx, "dotlive-schedule")
 	if err != nil {
 		return c.String(http.StatusInternalServerError, "error1")
@@ -40,14 +42,7 @@ func calendarHandler(c echo.Context) error {
 		return c.String(http.StatusInternalServerError, "error2")
 	}
 
-	calendar, err := service.CreateCalendar(ctx, client, baseDate, now, actors)
-	if err != nil {
-		return c.String(http.StatusInternalServerError, "error3")
-	}
-
-	res := CalendarResponse{
-		Calendar: calendar,
-	}
+	res := CalendarResponse{}
 	for _, a := range actors {
 		res.Actors = append(res.Actors, CalendarActor{
 			ID:    a.ID,
@@ -56,6 +51,21 @@ func calendarHandler(c echo.Context) error {
 			Emoji: a.Emoji,
 		})
 	}
+
+	if actorOnly {
+		res.Calendar = model.Calendar{
+			BaseDate: baseDate,
+			Days:     model.CalendarDaySlice{},
+		}
+		return c.JSON(http.StatusOK, res)
+	}
+
+	calendar, err := service.CreateCalendar(ctx, client, baseDate, now, actors)
+	if err != nil {
+		return c.String(http.StatusInternalServerError, "error3")
+	}
+
+	res.Calendar = calendar
 
 	return c.JSON(http.StatusOK, res)
 }
