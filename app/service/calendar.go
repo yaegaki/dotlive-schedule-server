@@ -43,6 +43,10 @@ func CreateCalendar(ctx context.Context, client *firestore.Client, baseDate jst.
 
 	// 2日以上前は確実にFixされている
 	fixedDayLimit := now.AddDay(-2)
+	monthStart := jst.ShortDate(baseDate.Year(), baseDate.Month(), 1)
+	if monthStart.Before(fixedDayLimit) && fixedDayLimit.Before(baseDate) {
+		calendar.FixedDay = fixedDayLimit.Day()
+	}
 
 	for d := baseDate; baseDate.Month() == d.Month(); d = d.AddOneDay() {
 		if d.Before(fixedDayLimit) {
