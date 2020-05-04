@@ -15,9 +15,10 @@ import (
 
 // CreateSchedule スケジュールを作成する
 func CreateSchedule(ctx context.Context, c *firestore.Client, date jst.Time, actors []model.Actor) (model.Schedule, error) {
+	// スケジュールを作成するためには前日の情報、翌日の12時までの情報が必要
 	r := jst.Range{
-		Begin: date.AddDay(-2),
-		End:   date.AddOneDay(),
+		Begin: date.AddDay(-1),
+		End:   date.AddOneDay().Add(time.Hour * 12),
 	}
 
 	plans, err := store.FindPlans(ctx, c, r)

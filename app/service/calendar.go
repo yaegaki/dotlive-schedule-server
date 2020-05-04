@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"time"
 
 	"cloud.google.com/go/firestore"
 	"github.com/yaegaki/dotlive-schedule-server/common"
@@ -20,10 +21,10 @@ func CreateCalendar(ctx context.Context, client *firestore.Client, baseDate jst.
 		end = jst.ShortDate(baseDate.Year(), baseDate.Month()+1, 1)
 	}
 
+	// スケジュールを作成するためには開始日の前日の情報、終了日の翌日の12時までの情報が必要
 	r := jst.Range{
-		// スケジュールの作成には前後の情報も必要なので-1/+1する
 		Begin: baseDate.AddDay(-1),
-		End:   end.AddOneDay(),
+		End:   end.AddOneDay().Add(time.Hour * 12),
 	}
 
 	calendar := model.Calendar{
