@@ -179,7 +179,7 @@ func pushNotifyVideoInternal(ctx context.Context, msgCli notify.Client, plans []
 			relatedActors = append(relatedActors, actor)
 		}
 
-		log.Printf("push notify video: %v, %v, isPlanned:%v, isLive:%v isColalbo:%v", v.ID, v.Text, isPlanned, v.IsLive, collaboID > 0)
+		log.Printf("push notify video: %v, %v, isPlanned:%v, isLive:%v isCollabo:%v", v.ID, v.Text, isPlanned, v.IsLive, collaboID > 0)
 		err = notify.PushNotifyVideo(ctx, msgCli, v, relatedActors)
 		if err != nil {
 			log.Printf("Can not send push notification: %v", err)
