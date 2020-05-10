@@ -3,8 +3,11 @@ package handler
 import (
 	"net/http"
 
+	"cloud.google.com/go/firestore"
 	"github.com/labstack/echo/v4"
+	"github.com/yaegaki/dotlive-schedule-server/model"
 	"github.com/yaegaki/dotlive-schedule-server/notify"
+	"github.com/yaegaki/dotlive-schedule-server/store"
 )
 
 // RouteTopic プッシュ通知のトピック関連のルーティングを設定する
@@ -24,17 +27,54 @@ func RouteTopic(e *echo.Echo) {
 
 func topicHandler(c echo.Context) error {
 	req := c.Request()
+	ctx := req.Context()
+	client, err := firestore.NewClient(ctx, "dotlive-schedule")
+	if err != nil {
+		return c.String(http.StatusInternalServerError, "error1")
+	}
+
+	actors, err := store.FindActors(ctx, client)
+	if err != nil {
+		return c.String(http.StatusInternalServerError, "error2")
+	}
+
 	req.ParseForm()
 	token := req.Form.Get("t")
 	if token == "" {
 		return c.String(http.StatusBadRequest, "bad request")
 	}
 
-	topics, err := notify.GetTopics(token)
+	subscribedTopics, err := notify.GetTopics(token)
 	if err != nil {
 		// どのような理由で失敗してもbad request
 		return c.String(http.StatusBadRequest, "bad request...")
 	}
 
-	return c.JSON(http.StatusOK, topics)
+	result := []model.Topic{
+		model.Topic{
+			Name:        "plan",
+			DisplayName: "計画",
+		},
+	}
+
+	for _, a := range actors {
+		result = append(result, model.Topic{
+			// Twitterのスクリーンネームをトピック名に使用する
+			Name:        a.TwitterScreenName,
+			DisplayName: a.Name,
+		})
+	}
+
+	for _, t := range subscribedTopics {
+		for i := range result {
+			temp := result[i]
+			if temp.Name == t {
+				temp.Subscribed = true
+				result[i] = temp
+				break
+			}
+		}
+	}
+
+	return c.JSON(http.StatusOK, result)
 }
