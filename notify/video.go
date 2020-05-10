@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/yaegaki/dotlive-schedule-server/jst"
 	"github.com/yaegaki/dotlive-schedule-server/model"
 	"golang.org/x/xerrors"
 )
@@ -12,10 +13,14 @@ import (
 const maxTopicCount = 5
 
 // PushNotifyVideo 配信をプッシュ通知する
-func PushNotifyVideo(ctx context.Context, cli Client, v model.Video, actors []model.Actor) error {
+func PushNotifyVideo(ctx context.Context, cli Client, videoDate jst.Time, v model.Video, actors []model.Actor) error {
 	count := len(actors)
 	if count == 0 {
 		return xerrors.Errorf("Actors are empty. video '%v'", v.URL)
+	}
+
+	data := map[string]string{
+		"date": fmt.Sprintf("%v-%v-%v", videoDate.Year(), int(videoDate.Month()), videoDate.Day()),
 	}
 
 	if count == 1 {
@@ -24,7 +29,7 @@ func PushNotifyVideo(ctx context.Context, cli Client, v model.Video, actors []mo
 		condition := fmt.Sprintf("'%v' in topics", actor.TwitterScreenName)
 		title := fmt.Sprintf("配信:%v", actor.Name)
 		body := v.Text
-		_, err := cli.Send(ctx, createMessageWithCondition(condition, title, body))
+		_, err := cli.Send(ctx, createMessageWithCondition(condition, title, body, data))
 
 		return err
 	}
@@ -50,7 +55,7 @@ func PushNotifyVideo(ctx context.Context, cli Client, v model.Video, actors []mo
 		}
 
 		condition := strings.Join(conditions[i:end], " || ")
-		_, err := cli.Send(ctx, createMessageWithCondition(condition, title, body))
+		_, err := cli.Send(ctx, createMessageWithCondition(condition, title, body, data))
 		// 最初の送信でエラーになった場合はエラーにする
 		// 2回目以降にエラーになった場合は1回目を取り消すことはできないので無視する
 		if i == 0 && err != nil {

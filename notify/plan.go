@@ -16,7 +16,9 @@ func PushNotifyPlan(ctx context.Context, cli Client, p model.Plan, actors model.
 	topic := "plan"
 	title := fmt.Sprintf("生放送スケジュール%v月%v日", int(d.Month()), d.Day())
 	body := createNotifyPlanBody(p, actors)
-	_, err := cli.Send(ctx, createMessage(topic, title, body))
+	_, err := cli.Send(ctx, createMessage(topic, title, body, map[string]string{
+		"date": fmt.Sprintf("%v-%v-%v", d.Year(), int(d.Month()), d.Day()),
+	}))
 
 	return err
 }

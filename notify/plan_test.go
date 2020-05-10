@@ -2,6 +2,7 @@ package notify
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	"firebase.google.com/go/messaging"
@@ -22,6 +23,18 @@ func comparePlanMessage(t *testing.T, got *messaging.Message, expect *messaging.
 
 	if got.Notification.Body != expect.Notification.Body {
 		t.Errorf("body, got: %v expect: %v", got.Notification.Body, expect.Notification.Body)
+	}
+
+	for key, s := range expect.Data {
+		temp, ok := got.Data[key]
+		if !ok {
+			t.Errorf("data, missing key: %v", key)
+			continue
+		}
+
+		if temp != s {
+			t.Errorf("data[%v], got: %v expect: %v", key, temp, s)
+		}
 	}
 
 	return "", nil
@@ -100,7 +113,9 @@ func TestNotifyPlan(t *testing.T) {
 				return
 			}
 
-			expect := createMessage("plan", tt.title, tt.body)
+			expect := createMessage("plan", tt.title, tt.body, map[string]string{
+				"date": fmt.Sprintf("%v-%v-%v", tt.date.Year(), int(tt.date.Month()), tt.date.Day()),
+			})
 			comparePlanMessage(t, cli.Messages[0], expect)
 		})
 	}

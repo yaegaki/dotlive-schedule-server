@@ -8,10 +8,11 @@ import (
 	"firebase.google.com/go/messaging"
 	. "github.com/yaegaki/dotlive-schedule-server/internal/testutil/actor"
 	. "github.com/yaegaki/dotlive-schedule-server/internal/testutil/notify"
+	"github.com/yaegaki/dotlive-schedule-server/jst"
 	"github.com/yaegaki/dotlive-schedule-server/model"
 )
 
-func testNotifyVideoMessages(t *testing.T, got []*messaging.Message, expectTitle, expectBody string, expectConditions []string) {
+func testNotifyVideoMessages(t *testing.T, got []*messaging.Message, expectTitle, expectBody string, expectConditions []string, date string) {
 	matchConditions := map[string]bool{}
 
 	for _, m := range got {
@@ -21,6 +22,10 @@ func testNotifyVideoMessages(t *testing.T, got []*messaging.Message, expectTitle
 
 		if m.Notification.Body != expectBody {
 			t.Errorf("body, got: %v expect: %v", m.Notification.Body, expectBody)
+		}
+
+		if d, ok := m.Data["date"]; !ok || d != date {
+			t.Errorf("data, got: %v, expect: %v", d, date)
 		}
 
 		if m.Condition == "" {
@@ -119,11 +124,11 @@ func TestNotifyVideo(t *testing.T) {
 		t.Run(tt.title, func(t *testing.T) {
 			cli := &TestNotifyClient{}
 
-			PushNotifyVideo(ctx, cli, model.Video{
+			PushNotifyVideo(ctx, cli, jst.ShortDate(2020, 5, 11), model.Video{
 				Text: tt.body,
 			}, tt.actors)
 
-			testNotifyVideoMessages(t, cli.Messages, tt.title, tt.body, tt.conditions)
+			testNotifyVideoMessages(t, cli.Messages, tt.title, tt.body, tt.conditions, "2020-5-11")
 		})
 	}
 }
