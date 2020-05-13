@@ -69,7 +69,7 @@ func getVideos(it *firestore.DocumentIterator) ([]model.Video, error) {
 
 // SaveVideo 動画を保存する
 // 既に存在している場合は通知設定は更新されない
-func SaveVideo(ctx context.Context, c *firestore.Client, v model.Video) error {
+func SaveVideo(ctx context.Context, c *firestore.Client, v model.Video, overrideOldVideoHandler func(v model.Video) bool) error {
 	temp := fromVideo(v)
 
 	return c.RunTransaction(ctx, func(ctx context.Context, t *firestore.Transaction) error {
@@ -80,6 +80,11 @@ func SaveVideo(ctx context.Context, c *firestore.Client, v model.Video) error {
 		if err == nil {
 			var oldVideo model.Video
 			doc.DataTo(&oldVideo)
+
+			if overrideOldVideoHandler != nil && !overrideOldVideoHandler(oldVideo) {
+				return nil
+			}
+
 			temp.Notified = oldVideo.Notified
 		} else if status.Code(err) != codes.NotFound {
 			return err

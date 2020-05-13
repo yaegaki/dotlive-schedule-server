@@ -170,7 +170,7 @@ func updateVideoStartAt(ctx context.Context, c *firestore.Client, vr *service.Vi
 		}
 		v.StartAt = newVideo.StartAt
 
-		err = store.SaveVideo(ctx, c, v)
+		err = store.SaveVideo(ctx, c, v, nil)
 		if err != nil {
 			log.Printf("Can not save video %v: %v", v.ID, err)
 		}

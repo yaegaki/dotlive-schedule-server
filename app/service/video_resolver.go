@@ -63,7 +63,7 @@ func (r *VideoResolver) resolveYoutubeVideo(tweet tweet.Tweet, url string, actor
 	}
 	v.Text = tweet.Text
 
-	err = r.save(v)
+	err = r.save(v, tweet)
 	if err != nil {
 		return xerrors.Errorf("Can not save youtube video(%v): %w", v.ID, err)
 	}
@@ -82,7 +82,7 @@ func (r *VideoResolver) resolveBilibiliVideo(tweet tweet.Tweet, url string, acto
 	}
 	v.Text = tweet.Text
 
-	err = r.save(v)
+	err = r.save(v, tweet)
 	if err != nil {
 		return xerrors.Errorf("Can not save bilibili video(%v): %w", v.ID, err)
 	}
@@ -90,8 +90,12 @@ func (r *VideoResolver) resolveBilibiliVideo(tweet tweet.Tweet, url string, acto
 	return nil
 }
 
-func (r *VideoResolver) save(v model.Video) error {
-	return store.SaveVideo(r.ctx, r.c, v)
+func (r *VideoResolver) save(v model.Video, tweet tweet.Tweet) error {
+	return store.SaveVideo(r.ctx, r.c, v, func(oldVideo model.Video) bool {
+		// 過去の動画についてツイートしたときに上書きされると微妙なので
+		// 動画の開始時間から1日後より以前の時間のツイートなら情報を更新する
+		return tweet.Date.Before(oldVideo.StartAt.AddOneDay())
+	})
 }
 
 // Mark impl tweet.VideoResolver
