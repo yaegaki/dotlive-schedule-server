@@ -1,0 +1,93 @@
+:root {
+    --primary-color: #00a3ef;
+    --header-margin: auto 1em;
+    --header-height: 51px;
+}
+
+html {
+    height: 100%;
+}
+
+body {
+    margin: 0;
+    background: #eee;
+    height: 100%;
+}
+
+header {
+    position: fixed;
+    width: 100%;
+    background: var(--primary-color);
+    display: grid;
+    grid-template-columns: auto 1fr;
+    color: white;
+    height: var(--header-height);
+    z-index: 99;
+}
+
+header > .logo {
+    margin: var(--header-margin);
+    vertical-align: middle;
+    font-size: 1.5em;
+}
+
+header > .logo > a {
+    display: flex;
+    align-items: center;
+}
+
+header a:link,
+header a:visited,
+header a:hover,
+header a:active {
+    color: white;
+    text-decoration: none;
+}
+
+
+header > nav {
+    margin: var(--header-margin);
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    font-size: 1.1em;
+}
+
+header > nav > a {
+    display: inline-block;
+}
+
+.body-wrapper {
+    position: relative;
+    top: var(--header-height);
+    padding: .3em;
+}
+
+.body {
+    background: white;
+    box-shadow: 0 0 5px rgba(0,0,0,.26);
+    padding: 5px 3em;
+}
+
+h2 {
+    margin: 1.2em 0 .5em 0;
+}
+
+p {
+    margin: 1em auto;
+}
+
+.body img.ss {
+    margin-right: 1em;
+    display: inline-block;
+    box-shadow: 0 0 5px rgba(0,0,0,.26);
+}
+
+.privacy a,
+.privacy a:link,
+.privacy a:visited,
+.privacy a:hover,
+.privacy a:active {
+    color: gray;
+    text-decoration: none;
+}

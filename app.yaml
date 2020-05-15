@@ -4,8 +4,32 @@ includes:
   - secret.yaml
 
 handlers:
-  - url: /(.*)
+  - url: /api/.*
     script: auto
+    secure: always
+
+  - url: /_task/.*
+    script: auto
+    secure: always
+
+  - url: /(.*\.(gif|png|jpeg|jpg|css|js|ico|json))$
+    static_files: web/\1
+    upload: web/(.*)
+    secure: always
+  
+  - url: /
+    static_files: web/index.html
+    upload: web/index.html
+    secure: always
+
+  - url: /help
+    static_files: web/help.html
+    upload: web/help.html
+    secure: always
+
+  - url: /privacy
+    static_files: web/privacy.html
+    upload: web/privacy.html
     secure: always
 
 automatic_scaling:
