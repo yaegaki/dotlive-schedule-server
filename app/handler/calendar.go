@@ -3,7 +3,6 @@ package handler
 import (
 	"net/http"
 
-	"cloud.google.com/go/firestore"
 	"github.com/labstack/echo/v4"
 	"github.com/yaegaki/dotlive-schedule-server/app/service"
 	"github.com/yaegaki/dotlive-schedule-server/jst"
@@ -32,11 +31,7 @@ func calendarHandler(c echo.Context) error {
 
 	actorOnly := query.Get("t") == "actor"
 
-	client, err := firestore.NewClient(ctx, "dotlive-schedule")
-	if err != nil {
-		return c.String(http.StatusInternalServerError, "error1")
-	}
-
+	client := store.GetClient()
 	actors, err := store.FindActors(ctx, client)
 	if err != nil {
 		return c.String(http.StatusInternalServerError, "error2")

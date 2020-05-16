@@ -3,7 +3,6 @@ package handler
 import (
 	"net/http"
 
-	"cloud.google.com/go/firestore"
 	"github.com/labstack/echo/v4"
 	"github.com/yaegaki/dotlive-schedule-server/model"
 	"github.com/yaegaki/dotlive-schedule-server/notify"
@@ -28,10 +27,7 @@ func RouteTopic(e *echo.Echo) {
 func topicHandler(c echo.Context) error {
 	req := c.Request()
 	ctx := req.Context()
-	client, err := firestore.NewClient(ctx, "dotlive-schedule")
-	if err != nil {
-		return c.String(http.StatusInternalServerError, "error1")
-	}
+	client := store.GetClient()
 
 	actors, err := store.FindActors(ctx, client)
 	if err != nil {

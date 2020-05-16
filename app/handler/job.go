@@ -34,12 +34,7 @@ func jobHandler(c echo.Context) error {
 		return c.String(http.StatusBadRequest, "bad request")
 	}
 
-	client, err := firestore.NewClient(ctx, "dotlive-schedule")
-	if err != nil {
-		log.Printf("Can not create a firestore client: %v", err)
-		return c.String(http.StatusInternalServerError, "error1")
-	}
-	defer client.Close()
+	client := store.GetClient()
 
 	videoResolver, err := service.NewVideoResolver(ctx, client)
 	if err != nil {

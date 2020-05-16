@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"cloud.google.com/go/firestore"
 	"github.com/labstack/echo/v4"
 	"github.com/yaegaki/dotlive-schedule-server/app/service"
 	"github.com/yaegaki/dotlive-schedule-server/jst"
@@ -18,10 +17,7 @@ func RouteSchedule(e *echo.Echo) {
 
 func scheduleHandler(c echo.Context) error {
 	ctx := c.Request().Context()
-	client, err := firestore.NewClient(ctx, "dotlive-schedule")
-	if err != nil {
-		return c.String(http.StatusInternalServerError, "error1")
-	}
+	client := store.GetClient()
 
 	now := jst.Now()
 	q := c.Request().URL.Query().Get("q")
