@@ -9,6 +9,7 @@ import (
 	"cloud.google.com/go/firestore"
 	"github.com/ChimeraCoder/anaconda"
 	"github.com/labstack/echo/v4"
+	"github.com/yaegaki/dotlive-schedule-server/app/cache"
 	"github.com/yaegaki/dotlive-schedule-server/app/internal"
 	"github.com/yaegaki/dotlive-schedule-server/app/service"
 	"github.com/yaegaki/dotlive-schedule-server/jst"
@@ -99,6 +100,9 @@ func jobHandler(c echo.Context) error {
 
 	// ツイートから動画情報を取得する
 	tweet.ResolveVideos(api, actors, videoResolver)
+
+	// 配信者情報をキャッシュ
+	cache.SetActors(actors)
 
 	// 開始時間の更新
 	updateVideoStartAt(ctx, client, videoResolver, actors)

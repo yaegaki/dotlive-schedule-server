@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/labstack/echo/v4"
+	"github.com/yaegaki/dotlive-schedule-server/app/cache"
 	"github.com/yaegaki/dotlive-schedule-server/app/service"
 	"github.com/yaegaki/dotlive-schedule-server/jst"
 	"github.com/yaegaki/dotlive-schedule-server/model"
@@ -32,7 +33,7 @@ func calendarHandler(c echo.Context) error {
 	actorOnly := query.Get("t") == "actor"
 
 	client := store.GetClient()
-	actors, err := store.FindActors(ctx, client)
+	actors, err := cache.FindActorsWithCache(ctx, client)
 	if err != nil {
 		return c.String(http.StatusInternalServerError, "error2")
 	}

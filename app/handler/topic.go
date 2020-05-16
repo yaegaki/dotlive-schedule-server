@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/labstack/echo/v4"
+	"github.com/yaegaki/dotlive-schedule-server/app/cache"
 	"github.com/yaegaki/dotlive-schedule-server/model"
 	"github.com/yaegaki/dotlive-schedule-server/notify"
 	"github.com/yaegaki/dotlive-schedule-server/store"
@@ -29,7 +30,7 @@ func topicHandler(c echo.Context) error {
 	ctx := req.Context()
 	client := store.GetClient()
 
-	actors, err := store.FindActors(ctx, client)
+	actors, err := cache.FindActorsWithCache(ctx, client)
 	if err != nil {
 		return c.String(http.StatusInternalServerError, "error2")
 	}
