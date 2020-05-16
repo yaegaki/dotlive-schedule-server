@@ -41,7 +41,7 @@ func main() {
 	}
 
 	ctx := context.Background()
-	client, err := firestore.NewClient(ctx, "dotlive-schedule")
+	client, err := firestore.NewClient(ctx, firestore.DetectProjectID)
 	if err != nil {
 		log.Fatalf("Can not create a firestore client: %v", err)
 	}
