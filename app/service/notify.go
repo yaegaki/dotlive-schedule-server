@@ -6,8 +6,6 @@ import (
 	"time"
 
 	"cloud.google.com/go/firestore"
-	firebase "firebase.google.com/go"
-	"firebase.google.com/go/messaging"
 	"github.com/yaegaki/dotlive-schedule-server/jst"
 	"github.com/yaegaki/dotlive-schedule-server/model"
 	"github.com/yaegaki/dotlive-schedule-server/notify"
@@ -16,12 +14,7 @@ import (
 
 // PushNotify プッシュ通知を実行する
 func PushNotify(ctx context.Context, c *firestore.Client, actors model.ActorSlice) {
-	app, err := firebase.NewApp(ctx, nil)
-	if err != nil {
-		log.Printf("Can not create firebase app: %v", err)
-		return
-	}
-	msgCli, err := app.Messaging(ctx)
+	msgCli, err := notify.NewClient(ctx, true)
 	if err != nil {
 		log.Printf("Can not create firebase messaging client: %v", err)
 		return
@@ -31,7 +24,7 @@ func PushNotify(ctx context.Context, c *firestore.Client, actors model.ActorSlic
 	pushNotifyVideo(ctx, c, msgCli, actors)
 }
 
-func pushNotifyLatestPlan(ctx context.Context, c *firestore.Client, msgCli *messaging.Client, actors model.ActorSlice) {
+func pushNotifyLatestPlan(ctx context.Context, c *firestore.Client, msgCli notify.Client, actors model.ActorSlice) {
 	plan, err := store.FindLatestPlan(ctx, c)
 	if err != nil {
 		log.Printf("Can not get latest plan: %v", err)
