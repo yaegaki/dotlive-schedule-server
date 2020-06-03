@@ -142,6 +142,11 @@ func pushNotifyVideoInternal(ctx context.Context, msgCli notify.Client, plans []
 			continue
 		}
 
+		if v.Source != model.VideoSourceYoutube && !isPlanned {
+			log.Printf("Skip notify video because not planned. video:%v startAt:%v now:%v source:%v", v.ID, startAt, now, v.Source)
+			continue
+		}
+
 		// シロちゃんの動画は常に計画されているとする
 		const siroID = "lLhToxu1Kyxuwwygh0FK"
 		if v.ActorID == siroID && !v.IsLive {
