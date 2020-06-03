@@ -20,6 +20,8 @@ type Actor struct {
 	YoutubeChannelID string
 	// BilibiliID BilibiliのID
 	BilibiliID string
+	// MildomID MildomのID
+	MildomID string
 	// LastTweetID 最後に取得したTweetのID
 	LastTweetID string
 }

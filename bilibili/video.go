@@ -30,7 +30,7 @@ func IsBilibiliURL(url string) bool {
 }
 
 // FindVideo BilibiliのURLから動画情報を取得する
-func FindVideo(bilibiliURL string, actor model.Actor, tweetID string, startAt jst.Time) (model.Video, error) {
+func FindVideo(bilibiliURL string, actor model.Actor, tweetDate jst.Time) (model.Video, error) {
 	u, err := url.Parse(bilibiliURL)
 	if err != nil {
 		return model.Video{}, err
@@ -65,12 +65,12 @@ func FindVideo(bilibiliURL string, actor model.Actor, tweetID string, startAt js
 	}
 
 	return model.Video{
-		// bilibiliは放送URL固定?なのでツイートの度にVideoエントリを作成する
-		ID:      tweetID + "-bilibili",
+		// bilibiliは放送URL固定なので1日1回しか配信しない前提でツイート日をIDにする
+		ID:      fmt.Sprintf("%v-%v-%v-biibili", tweetDate.Year(), int(tweetDate.Month()), tweetDate.Day()),
 		ActorID: actor.ID,
 		Source:  model.VideoSourceBilibili,
 		URL:     bilibiliURL,
 		IsLive:  true,
-		StartAt: startAt,
+		StartAt: tweetDate,
 	}, nil
 }

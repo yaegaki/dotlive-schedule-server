@@ -25,6 +25,8 @@ type actor struct {
 	YoutubeChannelID string `firestore:"youtubeChannelID"`
 	// BilibiliID BilibiliのID
 	BilibiliID string `firestore:"bilibiliID"`
+	// BilibiliID BilibiliのID
+	MildomID string `firestore:"mildomID"`
 	// LastTweetID 最後に取得したTweetのID
 	LastTweetID string `firestore:"lastTweetID"`
 }
@@ -52,6 +54,7 @@ func FindActors(ctx context.Context, c *firestore.Client) (model.ActorSlice, err
 			Emoji:             a.Emoji,
 			YoutubeChannelID:  a.YoutubeChannelID,
 			BilibiliID:        a.BilibiliID,
+			MildomID:          a.MildomID,
 			LastTweetID:       a.LastTweetID,
 		})
 	}
@@ -70,6 +73,7 @@ func SaveActor(ctx context.Context, c *firestore.Client, a model.Actor) error {
 		Emoji:             a.Emoji,
 		YoutubeChannelID:  a.YoutubeChannelID,
 		BilibiliID:        a.BilibiliID,
+		MildomID:          a.MildomID,
 		LastTweetID:       a.LastTweetID,
 	})
 	return err

@@ -99,6 +99,15 @@ func TestNotifyPlan(t *testing.T) {
 			"生放送スケジュール4月2日",
 			"19:00~:#シロ生放送\n22:00~:#神楽すず",
 		},
+		{
+			jst.ShortDate(2099, 4, 2),
+			[]EntryPart{
+				CreateEntryPart(Siro, 19, 0),
+				CreateEntryPartMildom(Suzu, 22, 0),
+			},
+			"生放送スケジュール4月2日",
+			"19:00~:#シロ生放送\n22:00~:#神楽すず(Mildom)",
+		},
 	}
 
 	ctx := context.Background()

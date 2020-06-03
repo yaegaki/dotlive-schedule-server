@@ -6,6 +6,7 @@ import (
 	"cloud.google.com/go/firestore"
 	"github.com/yaegaki/dotlive-schedule-server/bilibili"
 	"github.com/yaegaki/dotlive-schedule-server/common"
+	"github.com/yaegaki/dotlive-schedule-server/mildom"
 	"github.com/yaegaki/dotlive-schedule-server/model"
 	"github.com/yaegaki/dotlive-schedule-server/store"
 	"github.com/yaegaki/dotlive-schedule-server/tweet"
@@ -43,48 +44,31 @@ func NewVideoResolver(ctx context.Context, c *firestore.Client) (*VideoResolver,
 
 // Resolve impl tweet.VideoResolver
 func (r *VideoResolver) Resolve(tweet tweet.Tweet, url string, actor model.Actor) error {
+	var v model.Video
+	var err error
+
 	if youtube.IsYoutubeURL(url) {
-		return r.resolveYoutubeVideo(tweet, url, actor)
+		v, err = youtube.FindVideo(r.ctx, r.youtubeService, url, actor)
 	} else if bilibili.IsBilibiliURL(url) {
-		return r.resolveBilibiliVideo(tweet, url, actor)
+		v, err = bilibili.FindVideo(url, actor, tweet.Date)
+	} else if mildom.IsMildomURL(url) {
+		v, err = mildom.FindVideo(url, actor, tweet.Date)
+	} else {
+		return nil
 	}
 
-	return nil
-}
-
-func (r *VideoResolver) resolveYoutubeVideo(tweet tweet.Tweet, url string, actor model.Actor) error {
-	v, err := youtube.FindVideo(r.ctx, r.youtubeService, url, actor)
 	if err == common.ErrInvalidChannel {
 		return nil
 	}
 
 	if err != nil {
-		return xerrors.Errorf("Can not get youtube video(%v): %w", url, err)
+		return xerrors.Errorf("Can not get video(%v): %w", url, err)
 	}
 	v.Text = tweet.Text
 
 	err = r.save(v, tweet)
 	if err != nil {
-		return xerrors.Errorf("Can not save youtube video(%v): %w", v.ID, err)
-	}
-
-	return nil
-}
-
-func (r *VideoResolver) resolveBilibiliVideo(tweet tweet.Tweet, url string, actor model.Actor) error {
-	v, err := bilibili.FindVideo(url, actor, tweet.ID, tweet.Date)
-	if err == common.ErrInvalidChannel {
-		return nil
-	}
-
-	if err != nil {
-		return xerrors.Errorf("Can not get bilibili video(%v) info: %w", url, err)
-	}
-	v.Text = tweet.Text
-
-	err = r.save(v, tweet)
-	if err != nil {
-		return xerrors.Errorf("Can not save bilibili video(%v): %w", v.ID, err)
+		return xerrors.Errorf("Can not save video(%v): %w", v.ID, err)
 	}
 
 	return nil

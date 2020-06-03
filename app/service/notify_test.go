@@ -28,19 +28,21 @@ func TestPushNotifyVideoInternal(t *testing.T) {
 			"コラボ配信:🍄🍋",
 			"collabo",
 			[]model.Video{
-				model.Video{
+				{
 					ID:      "aaa",
 					ActorID: Suzu.ID,
 					StartAt: jst.Date(2020, 4, 29, 0, 0),
 					Text:    "past",
 					URL:     "https://past",
+					Source:  model.VideoSourceYoutube,
 				},
-				model.Video{
+				{
 					ID:      "video-id-1",
 					ActorID: Iori.ID,
 					StartAt: jst.Date(2020, 4, 29, 20, 0),
 					Text:    "collabo",
 					URL:     "https://1",
+					Source:  model.VideoSourceYoutube,
 				},
 			},
 		},
@@ -49,19 +51,21 @@ func TestPushNotifyVideoInternal(t *testing.T) {
 			"配信:カルロピノ",
 			"solo",
 			[]model.Video{
-				model.Video{
+				{
 					ID:      "aaa",
 					ActorID: Suzu.ID,
 					StartAt: jst.Date(2020, 4, 29, 0, 0),
 					Text:    "past",
 					URL:     "https://past",
+					Source:  model.VideoSourceYoutube,
 				},
-				model.Video{
+				{
 					ID:      "video-id-2",
 					ActorID: Pino.ID,
 					StartAt: jst.Date(2020, 4, 29, 22, 0),
 					Text:    "solo",
 					URL:     "https://2",
+					Source:  model.VideoSourceYoutube,
 				},
 			},
 		},

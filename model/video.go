@@ -6,8 +6,10 @@ import "github.com/yaegaki/dotlive-schedule-server/jst"
 const (
 	// VideoSourceYoutube Youtubeソース
 	VideoSourceYoutube = "Youtube"
-	// VideoSourceYoutube Bilibiliソース
+	// VideoSourceBilibili Bilibiliソース
 	VideoSourceBilibili = "Bilibili"
+	// VideoSourceMildom Mildomソース
+	VideoSourceMildom = "Mildom"
 )
 
 // Video 動画の情報

@@ -64,3 +64,14 @@ func CreateEntryPartBilibili(actor model.Actor, hour, min int) EntryPart {
 		CollaboID: 0,
 	}
 }
+
+// CreateEntryPartMildom .
+func CreateEntryPartMildom(actor model.Actor, hour, min int) EntryPart {
+	return EntryPart{
+		Actor:     actor,
+		Hour:      hour,
+		Min:       min,
+		Source:    model.VideoSourceMildom,
+		CollaboID: 0,
+	}
+}

@@ -49,19 +49,19 @@ func (p Plan) GetEntry(v Video) (PlanEntry, error) {
 		}
 
 		var planRange jst.Range
-		if v.Source == VideoSourceBilibili {
-			// bilibiliは開始時刻が正確にとれないので同じ日であれば計画通りとする
+		if v.Source == VideoSourceYoutube {
+			// 計画から+-30分以内なら計画通りとする
+			planRange = jst.Range{
+				Begin: e.StartAt.Add(-30 * time.Minute),
+				End:   e.StartAt.Add(30 * time.Minute),
+			}
+		} else {
+			// Youtube以外は開始時刻が正確にとれないので同じ日であれば計画通りとする
 			// 1日1回という前提
 			d := e.StartAt.FloorToDay()
 			planRange = jst.Range{
 				Begin: d,
 				End:   d.AddOneDay(),
-			}
-		} else {
-			// 計画から+-30分以内なら計画通りとする
-			planRange = jst.Range{
-				Begin: e.StartAt.Add(-30 * time.Minute),
-				End:   e.StartAt.Add(30 * time.Minute),
 			}
 		}
 

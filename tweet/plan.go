@@ -81,6 +81,8 @@ func ParsePlanTweet(t Tweet, actors model.ActorSlice, strict bool) (model.Plan, 
 				var source string
 				if strings.Contains(strings.ToLower(line), "bilibili") {
 					source = model.VideoSourceBilibili
+				} else if strings.Contains(strings.ToLower(line), "mildom") {
+					source = model.VideoSourceMildom
 				} else {
 					source = model.VideoSourceYoutube
 				}

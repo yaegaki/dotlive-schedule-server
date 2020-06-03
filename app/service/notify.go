@@ -105,8 +105,8 @@ func pushNotifyVideoInternal(ctx context.Context, msgCli notify.Client, plans []
 			isPlanned = true
 			targetPlan = p
 
-			// Bilibiliの場合は開始時刻を正しく取得できないので開始時刻に補正する
-			if v.Source == model.VideoSourceBilibili {
+			// youtube以外は開始時刻を正しく取得できないので開始時刻に補正する
+			if v.Source != model.VideoSourceYoutube {
 				startAt = e.StartAt
 			}
 
