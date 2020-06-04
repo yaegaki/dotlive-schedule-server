@@ -67,34 +67,34 @@ func jobHandler(c echo.Context) error {
 	userDotlive, newPlans, err := tweet.FindPlans(api, userDotlive, actors)
 	if err != nil {
 		log.Printf("Can not get plans: %v", err)
-	}
+	} else {
+		now := jst.Now()
+		for _, p := range newPlans {
+			// 2日以上前の過去の計画の更新はおかしいので無視する
+			if now.AddDay(-2).After(p.Date) {
+				log.Printf("Invalid plan date %v", p.Date)
+				continue
+			}
 
-	now := jst.Now()
-	for _, p := range newPlans {
-		// 2日以上前の過去の計画の更新はおかしいので無視する
-		if now.AddDay(-2).After(p.Date) {
-			log.Printf("Invalid plan date %v", p.Date)
-			continue
-		}
-
-		err := store.SavePlan(ctx, client, p)
-		if err != nil {
-			if err == store.ErrFixedPlan {
-				log.Printf("Plan is Fixed: %v", p.Date)
-			} else {
-				log.Printf("Can not save plan %v: %v", p.Date, err)
-				return c.String(http.StatusInternalServerError, "error5")
+			err := store.SavePlan(ctx, client, p)
+			if err != nil {
+				if err == store.ErrFixedPlan {
+					log.Printf("Plan is Fixed: %v", p.Date)
+				} else {
+					log.Printf("Can not save plan %v: %v", p.Date, err)
+					return c.String(http.StatusInternalServerError, "error5")
+				}
 			}
 		}
-	}
 
-	// TwitterUserの更新
-	// 必ず計画を保存した後に更新する
-	if lastTweetID != userDotlive.LastTweetID {
-		err = store.SaveTwitterUser(ctx, client, userDotlive)
-		if err != nil {
-			log.Printf("Can not save dotlive twitteruser: %v", err)
-			return c.String(http.StatusInternalServerError, "error6")
+		// TwitterUserの更新
+		// 必ず計画を保存した後に更新する
+		if lastTweetID != userDotlive.LastTweetID {
+			err = store.SaveTwitterUser(ctx, client, userDotlive)
+			if err != nil {
+				log.Printf("Can not save dotlive twitteruser: %v", err)
+				return c.String(http.StatusInternalServerError, "error6")
+			}
 		}
 	}
 
