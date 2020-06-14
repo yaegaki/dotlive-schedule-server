@@ -75,6 +75,8 @@ func formatPlanEntry(startAt jst.Time, hashtag, source string) string {
 	s := fmt.Sprintf("%02d:%02d~:%v", startAt.Hour(), startAt.Minute(), hashtag)
 	if source == model.VideoSourceBilibili {
 		s = s + "(bilibili)"
+	} else if source == model.VideoSourceMildom {
+		s = s + "(Mildom)"
 	}
 	return s
 }
