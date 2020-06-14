@@ -58,10 +58,15 @@ func (p Plan) GetEntry(v Video) (PlanEntry, error) {
 		} else {
 			// Youtube以外は開始時刻が正確にとれないので同じ日であれば計画通りとする
 			// 1日1回という前提
-			d := e.StartAt.FloorToDay()
+			beginDate := e.StartAt.FloorToDay()
+			endDate := beginDate.AddOneDay()
+			// もし24時以降の開始の場合は前日と当日の2日以内なら計画とする
+			if beginDate.Day() != p.Date.Day() {
+				beginDate = beginDate.Add(-1 * time.Hour).FloorToDay()
+			}
 			planRange = jst.Range{
-				Begin: d,
-				End:   d.AddOneDay(),
+				Begin: beginDate,
+				End:   endDate,
 			}
 		}
 
