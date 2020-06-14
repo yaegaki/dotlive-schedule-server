@@ -18,7 +18,6 @@ func TestIsMildomURL(t *testing.T) {
 			t.Fatalf("fail: %v", u)
 		}
 	}
-
 }
 
 func TestFindVideo(t *testing.T) {

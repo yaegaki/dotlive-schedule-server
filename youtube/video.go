@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/yaegaki/dotlive-schedule-server/common"
+	"github.com/yaegaki/dotlive-schedule-server/internal/video"
 	"github.com/yaegaki/dotlive-schedule-server/jst"
 	"github.com/yaegaki/dotlive-schedule-server/model"
 	y "google.golang.org/api/youtube/v3"
@@ -21,13 +22,7 @@ var youtubeURLPrefixes = []string{
 
 // IsYoutubeURL YoutubeのURLかどうか
 func IsYoutubeURL(url string) bool {
-	for _, p := range youtubeURLPrefixes {
-		if strings.HasPrefix(url, p) {
-			return true
-		}
-	}
-
-	return false
+	return video.IsTargetVideoSource(youtubeURLPrefixes, url)
 }
 
 // FindVideo youtubeのURLから動画情報を取得する

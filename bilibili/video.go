@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/yaegaki/dotlive-schedule-server/common"
+	"github.com/yaegaki/dotlive-schedule-server/internal/video"
 	"github.com/yaegaki/dotlive-schedule-server/jst"
 	"github.com/yaegaki/dotlive-schedule-server/model"
 )
@@ -20,13 +21,7 @@ var bilibiliURLPrefixes = []string{
 
 // IsBilibiliURL URLがBilibiliのものかどうか
 func IsBilibiliURL(url string) bool {
-	for _, p := range bilibiliURLPrefixes {
-		if strings.HasPrefix(url, p) {
-			return true
-		}
-	}
-
-	return false
+	return video.IsTargetVideoSource(bilibiliURLPrefixes, url)
 }
 
 // FindVideo BilibiliのURLから動画情報を取得する

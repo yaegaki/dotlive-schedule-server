@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/yaegaki/dotlive-schedule-server/common"
+	"github.com/yaegaki/dotlive-schedule-server/internal/video"
 	"github.com/yaegaki/dotlive-schedule-server/jst"
 	"github.com/yaegaki/dotlive-schedule-server/model"
 )
@@ -17,13 +18,7 @@ var mildomURLPrefixes = []string{
 
 // IsMildomURL URLがMildomのものかどうか
 func IsMildomURL(url string) bool {
-	for _, p := range mildomURLPrefixes {
-		if strings.HasPrefix(url, p) {
-			return true
-		}
-	}
-
-	return false
+	return video.IsTargetVideoSource(mildomURLPrefixes, url)
 }
 
 // FindVideo MildomのURLから動画情報を取得する
