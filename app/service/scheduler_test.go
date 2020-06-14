@@ -129,6 +129,58 @@ func TestCreateScheduleInternal(t *testing.T) {
 
 	// 特殊ケースのテスト
 
+	t.Run("over 24h", func(t *testing.T) {
+		d := jst.ShortDate(2020, 6, 6)
+		p := CreatePlan(d, []EntryPart{
+			CreateEntryPart(Suzu, 21, 0),
+			CreateEntryPartMildom(Chieri, 22, 0),
+		})
+		vs := []model.Video{
+			{
+				ID:      "suzu",
+				ActorID: Suzu.ID,
+				Source:  model.VideoSourceYoutube,
+				StartAt: jst.Date(2020, 6, 6, 21, 0),
+			},
+			{
+				ID:      "chieri",
+				ActorID: Chieri.ID,
+				Source:  model.VideoSourceYoutube,
+				StartAt: jst.Date(2020, 6, 6, 22, 00),
+			},
+			{
+				ID:      "natori",
+				ActorID: Natori.ID,
+				Source:  model.VideoSourceYoutube,
+				StartAt: jst.Date(2020, 6, 7, 0, 5),
+			},
+			{
+				ID:      "mememe",
+				ActorID: Mememe.ID,
+				Source:  model.VideoSourceYoutube,
+				StartAt: jst.Date(2020, 6, 7, 0, 15),
+			},
+		}
+		s := createScheduleInternal(d, []model.Plan{p}, vs, All)
+		compareSchedule(t, s, createScheduleForTest(jst.ShortDate(2020, 6, 6), []scheduleEntryPart{
+			createScheduleEntryPart(Suzu.Name, true, "suzu", 21, 0),
+			createScheduleEntryPart(Chieri.Name, true, "chieri", 22, 0),
+		}))
+
+		p = CreatePlan(d, []EntryPart{
+			CreateEntryPart(Suzu, 21, 0),
+			CreateEntryPartMildom(Chieri, 22, 0),
+			CreateEntryPart(Mememe, 24, 15),
+		})
+		s = createScheduleInternal(d, []model.Plan{p}, vs, All)
+		compareSchedule(t, s, createScheduleForTest(jst.ShortDate(2020, 6, 6), []scheduleEntryPart{
+			createScheduleEntryPart(Suzu.Name, true, "suzu", 21, 0),
+			createScheduleEntryPart(Chieri.Name, true, "chieri", 22, 0),
+			createScheduleEntryPart(Natori.Name, false, "natori", 24, 5),
+			createScheduleEntryPart(Mememe.Name, true, "mememe", 24, 15),
+		}))
+	})
+
 	// コラボ関連
 	t.Run("Collabo", func(t *testing.T) {
 		d := jst.ShortDate(2020, 4, 29)
@@ -139,19 +191,19 @@ func TestCreateScheduleInternal(t *testing.T) {
 			CreateEntryPartCollabo(Iroha, 22, 0, 2),
 		})
 		vs := []model.Video{
-			model.Video{
+			{
 				ID:      "iosu-1",
 				ActorID: Iori.ID,
 				Source:  model.VideoSourceYoutube,
 				StartAt: jst.Date(2020, 4, 29, 20, 0),
 			},
-			model.Video{
+			{
 				ID:      "iosu-2",
 				ActorID: Iori.ID,
 				Source:  model.VideoSourceYoutube,
 				StartAt: jst.Date(2020, 4, 29, 20, 15),
 			},
-			model.Video{
+			{
 				ID:      "pinogon",
 				ActorID: Pino.ID,
 				Source:  model.VideoSourceYoutube,
@@ -387,6 +439,17 @@ func createScheduleEntryPartBilibili(name string, planned bool, videoID string, 
 		planned: planned,
 		videoID: videoID,
 		source:  model.VideoSourceBilibili,
+		hour:    hour,
+		min:     min,
+	}
+}
+
+func createScheduleEntryPartMildom(name string, planned bool, videoID string, hour, min int) scheduleEntryPart {
+	return scheduleEntryPart{
+		name:    name,
+		planned: planned,
+		videoID: videoID,
+		source:  model.VideoSourceMildom,
 		hour:    hour,
 		min:     min,
 	}

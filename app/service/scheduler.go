@@ -74,7 +74,6 @@ func createScheduleInternal(date jst.Time, plans []model.Plan, videos []model.Vi
 		}
 	}
 
-	scheduleRange.End = scheduleRange.End.Add(30 * time.Minute)
 	entries := []model.ScheduleEntry{}
 	var addedPlanEntries []model.PlanEntry
 	var addedCollaboEntries []model.ScheduleEntry
