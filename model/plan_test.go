@@ -62,6 +62,27 @@ func TestIsPlanned(t *testing.T) {
 	}
 }
 
+func TestGetEntry(t *testing.T) {
+	p := CreatePlan(jst.ShortDate(2020, 6, 15), []EntryPart{
+		CreateEntryPart(Suzu, 13, 0),
+		CreateEntryPartMildom(Suzu, 19, 0),
+	})
+
+	e, err := p.GetEntry(Video{
+		ID:      "mildom",
+		ActorID: Suzu.ID,
+		Source:  VideoSourceMildom,
+		StartAt: jst.Date(2020, 6, 15, 19, 0),
+	})
+	if err != nil {
+		t.Fatal("not found entry for mildom")
+	}
+
+	if e.Source != VideoSourceMildom {
+		t.Fatal("invalid video source")
+	}
+}
+
 // TODO: テスト用パッケージを使う(import cycleになってエラーになるためそのままは使用できない)
 
 // EntryPart .

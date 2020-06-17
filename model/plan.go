@@ -48,6 +48,10 @@ func (p Plan) GetEntry(v Video) (PlanEntry, error) {
 			continue
 		}
 
+		if v.Source != e.Source {
+			continue
+		}
+
 		var planRange jst.Range
 		if v.Source == VideoSourceYoutube {
 			// 計画から+-30分以内なら計画通りとする
