@@ -81,6 +81,23 @@ func TestGetEntry(t *testing.T) {
 	if e.Source != VideoSourceMildom {
 		t.Fatal("invalid video source")
 	}
+
+	p = CreatePlan(jst.ShortDate(2020, 6, 17), []EntryPart{
+		CreateEntryPartBilibili(Siro, 12, 0),
+	})
+	e, err = p.GetEntry(Video{
+		ID:      "bilibili",
+		ActorID: Siro.ID,
+		Source:  VideoSourceBilibili,
+		StartAt: jst.Date(2020, 6, 16, 20, 0),
+	})
+	if err != nil {
+		t.Fatal("not found entry for bilibili")
+	}
+
+	if e.Source != VideoSourceBilibili {
+		t.Fatal("invalid video source")
+	}
 }
 
 // TODO: テスト用パッケージを使う(import cycleになってエラーになるためそのままは使用できない)
@@ -119,6 +136,17 @@ func CreateEntryPart(actor Actor, hour, min int) EntryPart {
 		Hour:      hour,
 		Min:       min,
 		Source:    VideoSourceYoutube,
+		CollaboID: 0,
+	}
+}
+
+// CreateEntryPartBilibili
+func CreateEntryPartBilibili(actor Actor, hour, min int) EntryPart {
+	return EntryPart{
+		Actor:     actor,
+		Hour:      hour,
+		Min:       min,
+		Source:    VideoSourceBilibili,
 		CollaboID: 0,
 	}
 }
