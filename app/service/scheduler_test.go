@@ -145,7 +145,7 @@ func TestCreateScheduleInternal(t *testing.T) {
 			{
 				ID:      "chieri",
 				ActorID: Chieri.ID,
-				Source:  model.VideoSourceYoutube,
+				Source:  model.VideoSourceMildom,
 				StartAt: jst.Date(2020, 6, 6, 22, 00),
 			},
 			{
@@ -164,7 +164,7 @@ func TestCreateScheduleInternal(t *testing.T) {
 		s := createScheduleInternal(d, []model.Plan{p}, vs, All)
 		compareSchedule(t, s, createScheduleForTest(jst.ShortDate(2020, 6, 6), []scheduleEntryPart{
 			createScheduleEntryPart(Suzu.Name, true, "suzu", 21, 0),
-			createScheduleEntryPart(Chieri.Name, true, "chieri", 22, 0),
+			createScheduleEntryPartMildom(Chieri.Name, true, "chieri", 22, 0),
 		}))
 
 		p = CreatePlan(d, []EntryPart{
@@ -175,7 +175,7 @@ func TestCreateScheduleInternal(t *testing.T) {
 		s = createScheduleInternal(d, []model.Plan{p}, vs, All)
 		compareSchedule(t, s, createScheduleForTest(jst.ShortDate(2020, 6, 6), []scheduleEntryPart{
 			createScheduleEntryPart(Suzu.Name, true, "suzu", 21, 0),
-			createScheduleEntryPart(Chieri.Name, true, "chieri", 22, 0),
+			createScheduleEntryPartMildom(Chieri.Name, true, "chieri", 22, 0),
 			createScheduleEntryPart(Natori.Name, false, "natori", 24, 5),
 			createScheduleEntryPart(Mememe.Name, true, "mememe", 24, 15),
 		}))
@@ -238,7 +238,7 @@ func getPlans(r jst.Range) []model.Plan {
 			CreateEntryPart(Pino, 22, 0),
 		}),
 		CreatePlan(jst.ShortDate(2020, 4, 24), []EntryPart{
-			CreateEntryPart(Siro, 19, 0),
+			CreateEntryPartBilibili(Siro, 19, 0),
 			CreateEntryPart(Suzu, 22, 0),
 		}),
 		CreatePlan(jst.ShortDate(2020, 4, 25), []EntryPart{
