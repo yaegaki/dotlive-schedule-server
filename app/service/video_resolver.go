@@ -42,6 +42,12 @@ func NewVideoResolver(ctx context.Context, c *firestore.Client) (*VideoResolver,
 	}, nil
 }
 
+// Except impl tweet.VideoResolver
+func (r *VideoResolver) Except(url string) bool {
+	// チャンネルURLが含まれる場合は配信の告知ではない
+	return youtube.IsYoutubeChannelURL(url)
+}
+
 // Resolve impl tweet.VideoResolver
 func (r *VideoResolver) Resolve(tweet tweet.Tweet, url string, actor model.Actor) error {
 	var v model.Video

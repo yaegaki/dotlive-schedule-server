@@ -20,6 +20,11 @@ var youtubeURLPrefixes = []string{
 	"https://www.youtube.com/watch",
 }
 
+// IsYoutubeChannelURL YoutubeのチャンネルのURLかどうか
+func IsYoutubeChannelURL(u string) bool {
+	return strings.HasPrefix(u, "https://www.youtube.com/channel/")
+}
+
 // IsYoutubeURL YoutubeのURLかどうか
 func IsYoutubeURL(url string) bool {
 	return video.IsTargetVideoSource(youtubeURLPrefixes, url)
