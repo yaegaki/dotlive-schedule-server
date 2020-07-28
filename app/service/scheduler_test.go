@@ -221,6 +221,24 @@ func TestCreateScheduleInternal(t *testing.T) {
 			createScheduleEntryPartCollabo(Iroha.Name, true, "pinogon", 22, 0, 2),
 		}))
 	})
+
+	// 計画が存在せずゲリラのみ
+	t.Run("empty plan", func(t *testing.T) {
+		d := jst.ShortDate(2020, 7, 28)
+		p := CreatePlan(d, []EntryPart{})
+		vs := []model.Video{
+			{
+				ID:      "io",
+				ActorID: Iori.ID,
+				Source:  model.VideoSourceYoutube,
+				StartAt: jst.Date(2020, 7, 28, 23, 0),
+			},
+		}
+		s := createScheduleInternal(d, []model.Plan{p}, vs, All)
+		compareSchedule(t, s, createScheduleForTest(jst.ShortDate(2020, 7, 28), []scheduleEntryPart{
+			createScheduleEntryPart(Iori.Name, false, "io", 23, 0),
+		}))
+	})
 }
 
 func getPlans(r jst.Range) []model.Plan {

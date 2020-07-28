@@ -24,12 +24,7 @@ func CreateSchedule(ctx context.Context, c *firestore.Client, date jst.Time, act
 	}
 
 	plans, err := store.FindPlans(ctx, c, r)
-	// 予定が見つからなかった場合は空で返す
-	if err == common.ErrNotFound {
-		return createEmptySchedule(date), nil
-	}
-
-	if err != nil {
+	if err != nil && err != common.ErrNotFound {
 		return model.Schedule{}, err
 	}
 
@@ -61,7 +56,11 @@ func createScheduleInternal(date jst.Time, plans []model.Plan, videos []model.Vi
 	}
 
 	if !found {
-		return createEmptySchedule(date)
+		// 計画が見つからなくてもゲリラのみが存在する可能性があるので
+		// 空の計画を作る
+		targetPlan = model.Plan{
+			Date: date,
+		}
 	}
 
 	scheduleRange := jst.Range{
