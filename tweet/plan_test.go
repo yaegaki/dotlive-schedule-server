@@ -124,6 +124,29 @@ http://vrlive.party/member/
 			},
 		},
 		{
+			"2020/7/28",
+			jst.ShortDate(2020, 7, 27),
+			// 日付がバグっている場合
+			`【どっとライブ】【アイドル部】
+【生放送スケジュール7月2日】
+
+20:00~: #北上双葉
+21:00~: #八重沢なとり
+22:00~: #花京院ちえり
+23:00~: #ヤマトイオリ
+
+メンバーの動画、SNSのリンクはこちらから！
+http://vrlive.party/member/
+
+#アイドル部　#どっとライブ`,
+			[]EntryPart{
+				CreateEntryPart(Futaba, 20, 00),
+				CreateEntryPart(Natori, 21, 00),
+				CreateEntryPart(Chieri, 22, 00),
+				CreateEntryPart(Iori, 23, 00),
+			},
+		},
+		{
 			"2099/4/19",
 			jst.ShortDate(2099, 4, 18),
 			`【どっとライブ】【アイドル部】
