@@ -40,7 +40,7 @@ func FindVideo(mildomURL string, actor model.Actor, tweetDate jst.Time) (model.V
 
 	return model.Video{
 		// Mildomは放送URL固定なので1日1回しか配信しない前提でツイート日をIDにする
-		ID:      fmt.Sprintf("%v-%v-%v-mildom", tweetDate.Year(), int(tweetDate.Month()), tweetDate.Day()),
+		ID:      fmt.Sprintf("%v-%v-%v-mildom-%v", tweetDate.Year(), int(tweetDate.Month()), tweetDate.Day(), actor.ID),
 		ActorID: actor.ID,
 		Source:  model.VideoSourceMildom,
 		URL:     mildomURL,
