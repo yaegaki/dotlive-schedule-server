@@ -78,10 +78,11 @@ func SaveVideo(ctx context.Context, c *firestore.Client, v model.Video, override
 
 		// 既に存在する場合は通知設定を引き継ぐ
 		if err == nil {
-			var oldVideo model.Video
+			var oldVideo video
 			doc.DataTo(&oldVideo)
+			oldVideo.id = doc.Ref.ID
 
-			if overrideOldVideoHandler != nil && !overrideOldVideoHandler(oldVideo) {
+			if overrideOldVideoHandler != nil && !overrideOldVideoHandler(oldVideo.Video()) {
 				return nil
 			}
 
