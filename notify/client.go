@@ -3,6 +3,7 @@ package notify
 import (
 	"context"
 	"crypto/tls"
+	"errors"
 	"log"
 	"net/http"
 	"net/http/httputil"
@@ -19,9 +20,19 @@ type Client interface {
 	Send(ctx context.Context, message *messaging.Message) (string, error)
 }
 
+type client struct {
+	c     *messaging.Client
+	reset func()
+}
+
+func (c *client) Send(ctx context.Context, message *messaging.Message) (string, error) {
+	c.reset()
+	return c.c.Send(ctx, message)
+}
+
 // NewClient クライアントを作成する
 func NewClient(ctx context.Context, enableLog bool) (Client, error) {
-	opts, err := createClientOptions(ctx, enableLog)
+	opts, reset, err := createClientOptions(ctx, enableLog)
 	if err != nil {
 		return nil, err
 	}
@@ -35,17 +46,20 @@ func NewClient(ctx context.Context, enableLog bool) (Client, error) {
 		return nil, err
 	}
 
-	return cli, nil
+	return &client{
+		c:     cli,
+		reset: reset,
+	}, nil
 }
 
-func createClientOptions(ctx context.Context, enableLog bool) ([]option.ClientOption, error) {
+func createClientOptions(ctx context.Context, enableLog bool) ([]option.ClientOption, func(), error) {
 	if !enableLog {
-		return nil, nil
+		return nil, nil, nil
 	}
 
 	certSource, err := cert.DefaultSource()
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	var baseTrans http.RoundTripper
 	if certSource != nil {
@@ -68,22 +82,29 @@ func createClientOptions(ctx context.Context, enableLog bool) ([]option.ClientOp
 	o := []option.ClientOption{option.WithScopes(firebaseScopes...)}
 	trans, err := ghttp.NewTransport(ctx, baseTrans, o...)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
+	}
+
+	rt := &rt{
+		base: trans,
 	}
 	hc := &http.Client{
-		Transport: &rt{
-			base: trans,
-		},
+		Transport: rt,
 	}
 	opt := option.WithHTTPClient(hc)
-	return []option.ClientOption{opt}, nil
+	return []option.ClientOption{opt}, rt.reset, nil
 }
 
 type rt struct {
 	base http.RoundTripper
+	err  error
 }
 
 func (t *rt) RoundTrip(r *http.Request) (*http.Response, error) {
+	if t.err != nil {
+		return nil, t.err
+	}
+
 	dump, _ := httputil.DumpRequestOut(r, true)
 	log.Printf("req:%s", dump)
 
@@ -91,5 +112,19 @@ func (t *rt) RoundTrip(r *http.Request) (*http.Response, error) {
 	dump, _ = httputil.DumpResponse(resp, true)
 	log.Printf("resp:%s", dump)
 
-	return resp, err
+	if err != nil {
+		return resp, err
+	}
+
+	// ServiceUnavailableならリトライさせない
+	if resp.StatusCode == http.StatusServiceUnavailable {
+		t.err = errors.New("ServiceUnavailable")
+		return nil, t.err
+	}
+
+	return resp, nil
+}
+
+func (t *rt) reset() {
+	t.err = nil
 }
