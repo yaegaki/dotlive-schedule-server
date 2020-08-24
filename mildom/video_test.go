@@ -32,7 +32,7 @@ func TestFindVideo(t *testing.T) {
 		t.Fatalf("fail: %v", err)
 	}
 
-	expectID := "2020-6-3-mildom"
+	expectID := "2020-6-3-mildom-" + actor.ID
 	if v.ID != expectID {
 		t.Fatalf("invalid id, got: %v expect: %v", v.ID, expectID)
 	}
