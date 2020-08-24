@@ -52,7 +52,7 @@ func ParsePlanTweet(t Tweet, actors model.ActorSlice, strict bool) (model.Plan, 
 
 			p.Date = jst.ShortDate(year, t.Month(), t.Day())
 			// 過去の計画がツイートされるのはおかしいのでその場合は翌日の計画とする
-			if p.Date.Before(tweetDate) {
+			if !tweetDate.FloorToDay().Equal(p.Date) && p.Date.Before(tweetDate) {
 				p.Date = tweetDate.AddOneDay().FloorToDay()
 			}
 			state = 1

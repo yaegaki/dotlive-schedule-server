@@ -219,6 +219,36 @@ http://vrlive.party/member/
 			t.Error("invalid strict mode")
 		}
 	})
+
+	t.Run("fix plan", func(t *testing.T) {
+		tweet := Tweet{
+			ID:   "temp",
+			Date: jst.ShortDate(2020, 8, 24),
+			Text: `変更のお知らせ
+【生放送スケジュール8月24日】
+
+13:00~: #八重沢なとり
+19:00~: #もこ田めめめ (Mildom)
+21:00~: #ヤマトイオリ
+22:00~: #神楽すず × アキロゼさん
+23:00~: #北上双葉
+
+メンバーのリンクはこちらから！
+http://vrlive.party/member/
+
+#アイドル部　#どっとライブ`,
+		}
+
+		parts := []EntryPart{
+			CreateEntryPart(Natori, 13, 00),
+			CreateEntryPartMildom(Mememe, 19, 00),
+			CreateEntryPart(Iori, 21, 00),
+			CreateEntryPart(Suzu, 22, 00),
+			CreateEntryPart(Futaba, 23, 00),
+		}
+
+		comparePlan(t, tweet, CreatePlan(tweet.Date, parts))
+	})
 }
 
 func comparePlan(t *testing.T, tweet Tweet, expect model.Plan) {
