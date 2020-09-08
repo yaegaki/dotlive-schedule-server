@@ -116,7 +116,9 @@ func TestNotifyPlan(t *testing.T) {
 		t.Run(tt.title, func(t *testing.T) {
 			cli := &TestNotifyClient{}
 
-			PushNotifyPlan(ctx, cli, CreatePlan(tt.date, tt.parts), All)
+			p := CreatePlan(tt.date, tt.parts)
+			p.Text = tt.body
+			PushNotifyPlan(ctx, cli, p, All)
 			if len(cli.Messages) != 1 {
 				t.Errorf("inavalid len(cli.Messages), got: %v", len(cli.Messages))
 				return

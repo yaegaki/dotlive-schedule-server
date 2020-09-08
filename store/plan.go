@@ -26,6 +26,9 @@ type plan struct {
 	Notified bool `firestore:"notified"`
 	// Fixed 固定化されているかどうか
 	Fixed bool `firestore:"fixed"`
+	// Text 計画ツイートの内容部分
+	// 計画を通知するときに使用する
+	Text string `firestore:"text"`
 }
 
 // planEntry 配信スケジュールのエントリ
@@ -199,6 +202,7 @@ func fromPlan(p model.Plan) plan {
 		Notified: p.Notified,
 		SourceID: p.SourceID,
 		Fixed:    p.Fixed,
+		Text:     p.Text,
 	}
 }
 
@@ -209,6 +213,7 @@ func (p plan) Plan() model.Plan {
 		Notified: p.Notified,
 		SourceID: p.SourceID,
 		Fixed:    p.Fixed,
+		Text:     p.Text,
 	}
 }
 

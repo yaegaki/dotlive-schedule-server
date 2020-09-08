@@ -249,6 +249,43 @@ http://vrlive.party/member/
 
 		comparePlan(t, tweet, CreatePlan(tweet.Date, parts))
 	})
+
+	t.Run("plan.Text", func(t *testing.T) {
+		tweet := Tweet{
+			ID:   "temp",
+			Date: jst.ShortDate(2020, 8, 24),
+			Text: `【生放送スケジュール8月24日】
+
+13:00~: #八重沢なとり
+19:00~: #もこ田めめめ (Mildom)
+21:00~: #ヤマトイオリ
+22:00~: #神楽すず × アキロゼさん
+23:00~: #北上双葉
+25:00~: #hogehoge
+
+メンバーのリンクはこちらから！
+http://vrlive.party/member/
+
+#アイドル部　#どっとライブ`,
+		}
+
+		p, err := ParsePlanTweet(tweet, All, false)
+		if err != nil {
+			t.Errorf("Can not parse tweet: %v", err)
+			return
+		}
+
+		expect := `13:00~: #八重沢なとり
+19:00~: #もこ田めめめ (Mildom)
+21:00~: #ヤマトイオリ
+22:00~: #神楽すず × アキロゼさん
+23:00~: #北上双葉
+25:00~: #hogehoge`
+
+		if p.Text != expect {
+			t.Errorf("Invalid text: %v", err)
+		}
+	})
 }
 
 func comparePlan(t *testing.T, tweet Tweet, expect model.Plan) {

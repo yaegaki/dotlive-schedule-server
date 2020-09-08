@@ -20,6 +20,9 @@ type Plan struct {
 	// Fixed 固定化されているか
 	// 固定化されている場合は定期ジョブによって更新されない
 	Fixed bool
+	// Text 計画ツイートの内容部分
+	// 計画を通知するときに使用する
+	Text string
 }
 
 // PlanEntry 計画のエントリ

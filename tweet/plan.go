@@ -119,6 +119,12 @@ func ParsePlanTweet(t Tweet, actors model.ActorSlice, strict bool) (model.Plan, 
 
 				collaboID++
 			}
+
+			if p.Text == "" {
+				p.Text = line
+			} else {
+				p.Text = p.Text + "\n" + line
+			}
 		}
 	}
 
