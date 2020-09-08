@@ -35,6 +35,8 @@ type plan struct {
 type planEntry struct {
 	// ActorID 配信者ID
 	ActorID string `firestore:"actorID"`
+	// HashTag コラボハッシュタグ
+	HashTag string `firestore:"hashTag"`
 	// StartAt 配信開始時刻
 	StartAt time.Time `firestore:"startAt"`
 	// Source 配信サイト
@@ -191,6 +193,7 @@ func fromPlan(p model.Plan) plan {
 	for _, e := range p.Entries {
 		entries = append(entries, planEntry{
 			ActorID:   e.ActorID,
+			HashTag:   e.HashTag,
 			StartAt:   e.StartAt.Time(),
 			Source:    e.Source,
 			CollaboID: e.CollaboID,
@@ -228,6 +231,7 @@ func (es planEntrySlice) PlanEntries() []model.PlanEntry {
 func (e planEntry) PlanEntry() model.PlanEntry {
 	return model.PlanEntry{
 		ActorID:   e.ActorID,
+		HashTag:   e.HashTag,
 		StartAt:   jst.From(e.StartAt),
 		Source:    e.Source,
 		CollaboID: e.CollaboID,

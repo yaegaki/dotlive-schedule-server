@@ -105,8 +105,25 @@ func ParsePlanTweet(t Tweet, actors model.ActorSlice, strict bool) (model.Plan, 
 				return model.Plan{}, xerrors.Errorf("invalid line: %v", line)
 			}
 
-			// コラボ
-			if actorCount > 1 {
+			if actorCount == 0 {
+				hashTagIndex := strings.Index(line, "#")
+				if hashTagIndex < 0 {
+					panic("hashTagIndex")
+				}
+				hashTag := string([]rune(line)[hashTagIndex:])
+				// コラボやイベントなどの特殊なハッシュタグ
+				p.Entries = append(p.Entries, model.PlanEntry{
+					ActorID: model.UnknownActorID,
+					HashTag: hashTag,
+					StartAt: startAt,
+					// とりあえずYoutubeにしておく
+					// (コラボはYoutubeではない可能性があるが
+					//	そもそも配信ページのリンクを取得できないので
+					//	Youtubeにしておいても問題ないはず)
+					Source: model.VideoSourceYoutube,
+				})
+			} else if actorCount > 1 {
+				// コラボ
 				for i := range p.Entries {
 					if i < prevEntryCount {
 						continue

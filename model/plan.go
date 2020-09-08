@@ -29,6 +29,10 @@ type Plan struct {
 type PlanEntry struct {
 	// ActorID 配信者ID
 	ActorID string
+	// HashTag コラボハッシュタグ
+	// 通常の配信の場合は空文字
+	// このフィールドが空文字ではない場合は必ずActorID == UnknownActorIDになる
+	HashTag string
 	// StartAt 開始時間
 	StartAt jst.Time
 	// Source 配信サイト

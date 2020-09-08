@@ -192,19 +192,27 @@ func createScheduleInternal(date jst.Time, plans []model.Plan, videos []model.Vi
 			continue
 		}
 
-		actor, err := findActorByID(actors, e.ActorID)
-		if err != nil {
-			log.Printf("Unknown actorID: %v", e.ActorID)
-			continue
-		}
-
 		se := model.ScheduleEntry{
-			ActorName: actor.Name,
-			Icon:      actor.Icon,
 			StartAt:   e.StartAt,
 			Planned:   true,
 			Source:    e.Source,
 			CollaboID: e.CollaboID,
+		}
+
+		if e.ActorID == model.UnknownActorID {
+			se.ActorName = e.HashTag
+			// .LIVE【どっとライブ】のアイコン
+			// TODO: アイコンをどうするか
+			se.Icon = "https://pbs.twimg.com/profile_images/953977243251822593/tglswtot.jpg"
+		} else {
+			actor, err := findActorByID(actors, e.ActorID)
+			if err != nil {
+				log.Printf("Unknown actorID: %v", e.ActorID)
+				continue
+			}
+
+			se.ActorName = actor.Name
+			se.Icon = actor.Icon
 		}
 		entries = append(entries, se)
 	}

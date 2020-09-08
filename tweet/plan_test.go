@@ -81,6 +81,7 @@ http://vrlive.party/member/
 				CreateEntryPart(Pino, 15, 00),
 				CreateEntryPart(Futaba, 18, 00),
 				CreateEntryPart(Chieri, 19, 00),
+				CreateEntryPartCollaboHashTag(20, 00, "#Vに国境はいらない（出演時間21:30~を予定）"),
 				CreateEntryPart(Pino, 24, 00),
 			},
 		},

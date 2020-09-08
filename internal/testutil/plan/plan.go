@@ -8,6 +8,7 @@ import (
 // EntryPart .
 type EntryPart struct {
 	Actor     model.Actor
+	HashTag   string
 	Hour      int
 	Min       int
 	Source    string
@@ -20,6 +21,7 @@ func CreatePlan(d jst.Time, parts []EntryPart) model.Plan {
 	for _, p := range parts {
 		entries = append(entries, model.PlanEntry{
 			ActorID:   p.Actor.ID,
+			HashTag:   p.HashTag,
 			StartAt:   jst.Date(d.Year(), d.Month(), d.Day(), p.Hour, p.Min),
 			Source:    p.Source,
 			CollaboID: p.CollaboID,
@@ -51,6 +53,20 @@ func CreateEntryPartCollabo(actor model.Actor, hour, min int, collaboID int) Ent
 		Min:       min,
 		Source:    model.VideoSourceYoutube,
 		CollaboID: collaboID,
+	}
+}
+
+// CreateEntryPartCollaboHashTag .
+func CreateEntryPartCollaboHashTag(hour, min int, hashTag string) EntryPart {
+	return EntryPart{
+		Actor: model.Actor{
+			ID: model.UnknownActorID,
+		},
+		HashTag:   hashTag,
+		Hour:      hour,
+		Min:       min,
+		Source:    model.VideoSourceYoutube,
+		CollaboID: 0,
 	}
 }
 
