@@ -5,7 +5,10 @@ import "github.com/yaegaki/dotlive-schedule-server/jst"
 // Schedule スケジュール
 type Schedule struct {
 	// Date 配信日
-	Date    jst.Time        `json:"date"`
+	Date jst.Time `json:"date"`
+	// TweetID 元ツイートのID
+	TweetID string `json:"tweetId"`
+	// Entries エントリー
 	Entries []ScheduleEntry `json:"entries"`
 }
 

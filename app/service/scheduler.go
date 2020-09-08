@@ -243,6 +243,7 @@ func createScheduleInternal(date jst.Time, plans []model.Plan, videos []model.Vi
 
 	return model.Schedule{
 		Date:    targetPlan.Date,
+		TweetID: targetPlan.SourceID,
 		Entries: entries,
 	}
 }
