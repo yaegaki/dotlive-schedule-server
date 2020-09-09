@@ -16,6 +16,8 @@ type Schedule struct {
 type ScheduleEntry struct {
 	// ActorName 配信者名
 	ActorName string `json:"actorName"`
+	// Note 配信の補足情報
+	Note string `json:"note"`
 	// Icon 配信者アイコン
 	Icon string `json:"icon"`
 	// StartAt 配信予定/予定時刻

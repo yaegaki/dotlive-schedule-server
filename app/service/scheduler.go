@@ -162,6 +162,7 @@ func createScheduleInternal(date jst.Time, plans []model.Plan, videos []model.Vi
 
 		se := model.ScheduleEntry{
 			ActorName: actor.Name,
+			Note:      createNote(isPlanned, v.Source),
 			Icon:      actor.Icon,
 			StartAt:   startAt,
 			Planned:   isPlanned,
@@ -213,6 +214,7 @@ func createScheduleInternal(date jst.Time, plans []model.Plan, videos []model.Vi
 
 			se.ActorName = actor.Name
 			se.Icon = actor.Icon
+			se.Note = createNote(true, e.Source)
 		}
 		entries = append(entries, se)
 	}
@@ -256,4 +258,18 @@ func findActorByID(actors []model.Actor, id string) (model.Actor, error) {
 	}
 
 	return model.Actor{}, common.ErrNotFound
+}
+
+func createNote(isPlanned bool, source string) string {
+	if source == model.VideoSourceYoutube {
+		if isPlanned {
+			return ""
+		}
+
+		// ゲリラ配信の表示も一応できるようにしておく
+		// 現状は何も表示しない
+		return ""
+	}
+
+	return " (" + source + ")"
 }
