@@ -9,10 +9,8 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-// actor 配信者
+// twitterUser ツイッターのユーザー
 type twitterUser struct {
-	// id 配信者ID
-	id string
 	// LastTweetID 最後に取得したTweetのID
 	LastTweetID string `firestore:"lastTweetID"`
 }
@@ -34,11 +32,13 @@ func FindTwitterUser(ctx context.Context, c *firestore.Client, screenName string
 		return model.TwitterUser{}, err
 	}
 
-	var user model.TwitterUser
+	var user twitterUser
 	doc.DataTo(&user)
-	user.ScreenName = screenName
 
-	return user, nil
+	return model.TwitterUser{
+		ScreenName:  screenName,
+		LastTweetID: user.LastTweetID,
+	}, nil
 }
 
 // SaveTwitterUser 配信者を保存する
