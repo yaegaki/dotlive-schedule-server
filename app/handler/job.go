@@ -51,6 +51,9 @@ func jobHandler(c echo.Context) error {
 
 	api := anaconda.NewTwitterApi("", "")
 
+	// あわい先生のどっとライブスケジュールの情報を更新
+	updateAwaiSenseiSchedule(ctx, api, client)
+
 	// プロフィール画像更新
 	for _, a := range actors {
 		updateProfileImage(ctx, api, client, &a)
@@ -150,6 +153,57 @@ func updateProfileImage(ctx context.Context, api *anaconda.TwitterApi, c *firest
 	}
 
 	*actor = copy
+}
+
+func updateAwaiSenseiSchedule(ctx context.Context, api *anaconda.TwitterApi, client *firestore.Client) {
+	userAwaiSensei, err := store.FindTwitterUser(ctx, client, tweet.ScreenNameAwaiSensei)
+	if err != nil {
+		log.Printf("Can not get user(awaisensei): %v", err)
+		return
+	}
+
+	tweets, err := tweet.GetTimeline(api, userAwaiSensei.ScreenName, userAwaiSensei.LastTweetID)
+	if err != nil {
+		log.Printf("Can not get timeline: %v", err)
+		return
+	}
+
+	if len(tweets) == 0 {
+		return
+	}
+
+	userAwaiSensei.LastTweetID = tweets[0].ID
+
+	var schedule model.AwaiSenseiSchedule
+	for _, t := range tweets {
+		for _, ht := range t.HashTags {
+			if ht == "どっとライブ予定表" && len(t.MediaURLs) > 0 {
+				schedule = model.AwaiSenseiSchedule{
+					TweetID:  t.ID,
+					Title:    strings.Split(t.Text, "\n")[0],
+					ImageURL: t.MediaURLs[0],
+				}
+				break
+			}
+		}
+
+		if schedule.TweetID != "" {
+			break
+		}
+	}
+
+	if schedule.TweetID != "" {
+		err = store.SaveAwaiSenseiSchedule(ctx, client, schedule)
+		if err != nil {
+			log.Printf("Can not save awaisenseischedule: %v", err)
+			return
+		}
+	}
+
+	err = store.SaveTwitterUser(ctx, client, userAwaiSensei)
+	if err != nil {
+		log.Printf("Can not save user: %v", err)
+	}
 }
 
 // updateVideoStartAt 開始予定時間より早く始まっている場合に開始時間を修正する

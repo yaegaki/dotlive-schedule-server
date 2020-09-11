@@ -12,4 +12,8 @@ type Tweet struct {
 	Date jst.Time
 	// URLs ツイートに含まれるURL
 	URLs []string
+	// MediaURLs ツイートに含まれるメディアのURL
+	MediaURLs []string
+	// HashTags ツイートに含まれるハッシュタグ
+	HashTags []string
 }

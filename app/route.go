@@ -11,4 +11,5 @@ func Route(e *echo.Echo) {
 	handler.RouteSchedule(e)
 	handler.RouteTopic(e)
 	handler.RouteCalendar(e)
+	handler.RouteWidget(e)
 }

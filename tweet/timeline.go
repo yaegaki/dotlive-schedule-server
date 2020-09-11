@@ -7,6 +7,11 @@ import (
 	"github.com/yaegaki/dotlive-schedule-server/jst"
 )
 
+// GetTimeline タイムラインを取得する
+func GetTimeline(api *anaconda.TwitterApi, screenName, lastTweetID string) ([]Tweet, error) {
+	return getTimeline(api, screenName, lastTweetID)
+}
+
 func getTimeline(api *anaconda.TwitterApi, screenName, lastTweetID string) ([]Tweet, error) {
 	param := url.Values{
 		"screen_name":     []string{screenName},
@@ -34,11 +39,23 @@ func getTimeline(api *anaconda.TwitterApi, screenName, lastTweetID string) ([]Tw
 			urls = append(urls, e.Expanded_url)
 		}
 
+		var mediaURLs []string
+		for _, m := range t.Entities.Media {
+			mediaURLs = append(mediaURLs, m.Media_url_https)
+		}
+
+		var hashTags []string
+		for _, t := range t.Entities.Hashtags {
+			hashTags = append(hashTags, t.Text)
+		}
+
 		result = append(result, Tweet{
-			ID:   t.IdStr,
-			Date: jst.From(ti),
-			Text: t.FullText,
-			URLs: urls,
+			ID:        t.IdStr,
+			Date:      jst.From(ti),
+			Text:      t.FullText,
+			URLs:      urls,
+			MediaURLs: mediaURLs,
+			HashTags:  hashTags,
 		})
 	}
 
