@@ -176,20 +176,17 @@ func updateAwaiSenseiSchedule(ctx context.Context, api *anaconda.TwitterApi, cli
 
 	var schedule model.AwaiSenseiSchedule
 	for _, t := range tweets {
-		for _, ht := range t.HashTags {
-			if ht == "どっとライブ予定表" && len(t.MediaURLs) > 0 {
-				schedule = model.AwaiSenseiSchedule{
-					TweetID:  t.ID,
-					Title:    strings.Split(t.Text, "\n")[0],
-					ImageURL: t.MediaURLs[0],
-				}
-				break
-			}
+		if !isAwaiSenseiScheduleTweet(t) {
+			continue
 		}
 
-		if schedule.TweetID != "" {
-			break
+		schedule = model.AwaiSenseiSchedule{
+			TweetID:  t.ID,
+			Title:    strings.Split(t.Text, "\n")[0],
+			ImageURL: t.MediaURLs[0],
 		}
+
+		break
 	}
 
 	if schedule.TweetID != "" {
@@ -204,6 +201,34 @@ func updateAwaiSenseiSchedule(ctx context.Context, api *anaconda.TwitterApi, cli
 	if err != nil {
 		log.Printf("Can not save user: %v", err)
 	}
+}
+
+func isAwaiSenseiScheduleTweet(t tweet.Tweet) bool {
+	if len(t.MediaURLs) == 0 {
+		return false
+	}
+
+	// ハッシュタグがある場合は確実
+	for _, ht := range t.HashTags {
+		if ht == "どっとライブ予定表" {
+			return true
+		}
+	}
+
+	// ハッシュタグがない場合は以下の条件で判定する
+	// 1. 1行目に"どっとライブ予定表"が含まれる
+	// 2. 2行目が空白
+
+	lines := strings.Split(t.Text, "\n")
+	if len(lines) < 3 {
+		return false
+	}
+
+	if strings.Index(lines[0], "どっとライブ予定表") < 0 {
+		return false
+	}
+
+	return strings.TrimSpace(lines[1]) == ""
 }
 
 // updateVideoStartAt 開始予定時間より早く始まっている場合に開始時間を修正する
