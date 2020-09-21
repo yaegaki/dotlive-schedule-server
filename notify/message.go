@@ -21,6 +21,9 @@ func createMessage(topic, title, body string, data map[string]string) *messaging
 		},
 		Android: &messaging.AndroidConfig{
 			Priority: "high",
+			Notification: &messaging.AndroidNotification{
+				ClickAction: "FLUTTER_NOTIFICATION_CLICK",
+			},
 		},
 	}
 }
@@ -42,6 +45,9 @@ func createMessageWithCondition(condition, title, body string, data map[string]s
 		},
 		Android: &messaging.AndroidConfig{
 			Priority: "high",
+			Notification: &messaging.AndroidNotification{
+				ClickAction: "FLUTTER_NOTIFICATION_CLICK",
+			},
 		},
 	}
 }
