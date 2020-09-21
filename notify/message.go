@@ -19,6 +19,9 @@ func createMessage(topic, title, body string, data map[string]string) *messaging
 				},
 			},
 		},
+		Android: &messaging.AndroidConfig{
+			Priority: "high",
+		},
 	}
 }
 
@@ -36,6 +39,9 @@ func createMessageWithCondition(condition, title, body string, data map[string]s
 					Sound: "default",
 				},
 			},
+		},
+		Android: &messaging.AndroidConfig{
+			Priority: "high",
 		},
 	}
 }
