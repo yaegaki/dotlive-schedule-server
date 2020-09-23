@@ -2,6 +2,8 @@ package store
 
 import (
 	"context"
+	"sort"
+	"strings"
 	"time"
 
 	"cloud.google.com/go/firestore"
@@ -96,6 +98,7 @@ func FindLatestPlan(ctx context.Context, c *firestore.Client) (model.Plan, error
 // Notifiedを更新する場合はMarkPlanAsNotifiedを使用する
 func SavePlan(ctx context.Context, c *firestore.Client, p model.Plan) error {
 	temp := fromPlan(p)
+	additional := p.Additional
 	fixed := false
 
 	err := c.RunTransaction(ctx, func(ctx context.Context, t *firestore.Transaction) error {
@@ -115,6 +118,9 @@ func SavePlan(ctx context.Context, c *firestore.Client, p model.Plan) error {
 				return nil
 			}
 			temp.Notified = oldPlan.Notified
+			if additional {
+				temp = oldPlan.Merge(temp)
+			}
 			return t.Set(docs[0].Ref, temp)
 		}
 
@@ -218,6 +224,62 @@ func (p plan) Plan() model.Plan {
 		Fixed:    p.Fixed,
 		Text:     p.Text,
 	}
+}
+
+func (p plan) Merge(other plan) plan {
+	if len(other.Entries) == 0 {
+		return p
+	}
+
+	// other.Textがp.Textに完全に含まれている場合は既に追加されている
+	if strings.Index(p.Text, other.Text) >= 0 {
+		return p
+	}
+
+	newPlan := p
+	baseCollaboID := 0
+	for _, e := range p.Entries {
+		if e.CollaboID > baseCollaboID {
+			baseCollaboID = e.CollaboID
+		}
+	}
+
+OUTER:
+	for _, e := range other.Entries {
+		for _, existsEntries := range p.Entries {
+			if e.ActorID == existsEntries.ActorID && e.StartAt.Equal(existsEntries.StartAt) {
+				continue OUTER
+			}
+		}
+
+		// 追加のコラボIDと既存のコラボIDが被らないようにする
+		if e.CollaboID > 0 {
+			e.CollaboID = e.CollaboID + baseCollaboID
+		}
+
+		newPlan.Entries = append(newPlan.Entries, e)
+	}
+
+	sort.Slice(newPlan.Entries, func(i, j int) bool {
+		l := newPlan.Entries[i]
+		r := newPlan.Entries[j]
+		if l.StartAt.Equal(r.StartAt) {
+			return false
+		}
+
+		// 開始時間でソート
+		return l.StartAt.Before(r.StartAt)
+	})
+
+	if len(p.Entries) == 0 {
+		newPlan.Text = other.Text
+	} else if p.Entries[0].StartAt.Before(other.Entries[0].StartAt) {
+		newPlan.Text = p.Text + "\n" + other.Text
+	} else {
+		newPlan.Text = other.Text + "\n" + p.Text
+	}
+
+	return newPlan
 }
 
 func (es planEntrySlice) PlanEntries() []model.PlanEntry {

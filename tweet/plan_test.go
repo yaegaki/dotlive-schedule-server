@@ -287,6 +287,88 @@ http://vrlive.party/member/
 			t.Errorf("Invalid text: %v", err)
 		}
 	})
+
+	t.Run("Additional", func(t *testing.T) {
+		tweet := Tweet{
+			ID:   "temp",
+			Date: jst.ShortDate(2020, 9, 24),
+			Text: `【
+【どっとライブ】【アイドル部】
+【生放送スケジュール9月24日】
+
+10:00~: #八重沢なとり
+20:00~: #神楽すず (Mildom)
+20:00~: #電脳少女ガッチマンV (Siro Channel)
+
+メンバーの動画、SNSのリンクはこちらから！
+http://vrlive.party/member/
+
+#アイドル部　#どっとライブ`,
+		}
+
+		p, err := ParsePlanTweet(tweet, All, false)
+		if err != nil {
+			t.Fatalf("Can not parse tweet: %v", err)
+			return
+		}
+
+		if p.Additional {
+			t.Fatal("must be not additional")
+		}
+
+		tweet = Tweet{
+			ID:   "temp",
+			Date: jst.ShortDate(2020, 9, 24),
+			Text: `【
+【どっとライブ】【アイドル部】
+【生放送スケジュール9月24日①】
+
+10:00~: #八重沢なとり
+20:00~: #神楽すず (Mildom)
+20:00~: #電脳少女ガッチマンV (Siro Channel)
+
+メンバーの動画、SNSのリンクはこちらから！
+http://vrlive.party/member/
+
+#アイドル部　#どっとライブ`,
+		}
+
+		p, err = ParsePlanTweet(tweet, All, false)
+		if err != nil {
+			t.Fatalf("Can not parse tweet: %v", err)
+			return
+		}
+
+		if !p.Additional {
+			t.Fatal("must be additional")
+		}
+
+		tweet = Tweet{
+			ID:   "temp",
+			Date: jst.ShortDate(2020, 9, 24),
+			Text: `【どっとライブ】【アイドル部】
+【生放送スケジュール9月24日②】
+
+21:00~: #電脳少女ガッチマンV (ガッチマンVさんチャンネル)
+22:00~: #ヤマトイオリ
+23:00~: #Vのから騒ぎ
+
+メンバーの動画、SNSのリンクはこちらから！
+http://vrlive.party/member/
+
+#アイドル部　#どっとライブ`,
+		}
+
+		p, err = ParsePlanTweet(tweet, All, false)
+		if err != nil {
+			t.Fatalf("Can not parse tweet: %v", err)
+			return
+		}
+
+		if !p.Additional {
+			t.Fatal("must be additional")
+		}
+	})
 }
 
 func comparePlan(t *testing.T, tweet Tweet, expect model.Plan) {
@@ -298,6 +380,10 @@ func comparePlan(t *testing.T, tweet Tweet, expect model.Plan) {
 
 	if !p.Date.Equal(expect.Date) {
 		t.Errorf("invalid Date, got: %v expect: %v", p.Date, expect.Date)
+	}
+
+	if p.Additional != expect.Additional {
+		t.Errorf("invalid Additional, got: %v expect: %v", p.Additional, expect.Additional)
 	}
 
 	if len(p.Entries) != len(expect.Entries) {

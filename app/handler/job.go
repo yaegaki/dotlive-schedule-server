@@ -72,23 +72,13 @@ func jobHandler(c echo.Context) error {
 		log.Printf("Can not get plans: %v", err)
 	} else {
 		now := jst.Now()
-		savedPlans := []model.Plan{}
-		for _, p := range newPlans {
+		// 古い計画から順番にセーブしていく
+		for i := len(newPlans) - 1; i >= 0; i-- {
+			p := newPlans[i]
+
 			// 2日以上前の過去の計画の更新はおかしいので無視する
 			if now.AddDay(-2).After(p.Date) {
 				log.Printf("Invalid plan date %v", p.Date)
-				continue
-			}
-
-			skip := false
-			for _, sp := range savedPlans {
-				if p.Date.Equal(sp.Date) {
-					skip = true
-					break
-				}
-			}
-
-			if skip {
 				continue
 			}
 
@@ -100,8 +90,6 @@ func jobHandler(c echo.Context) error {
 					log.Printf("Can not save plan %v: %v", p.Date, err)
 					return c.String(http.StatusInternalServerError, "error5")
 				}
-			} else {
-				savedPlans = append(savedPlans, p)
 			}
 		}
 

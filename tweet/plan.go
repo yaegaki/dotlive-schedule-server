@@ -38,6 +38,21 @@ func ParsePlanTweet(t Tweet, actors model.ActorSlice, strict bool) (model.Plan, 
 				continue
 			}
 
+			// 計画が複数に分けてツイートされる場合、
+			// 日付の後に①などがついている
+			// パースするときに邪魔なので①の部分は消す
+			daySplits := strings.Split(line, "日")
+			if len(daySplits) > 1 {
+				// 複数に分かれている場合は常に追記
+				// TODO: 訂正かつ複数に分かれている場合、
+				// ずっと追記になってしまうのでどうにかする
+				if !strings.HasPrefix(daySplits[1], "】") {
+					p.Additional = true
+				}
+
+				line = daySplits[0] + "日】"
+			}
+
 			t, err := time.Parse(liveScheduleLayout, line)
 			if err != nil {
 				continue

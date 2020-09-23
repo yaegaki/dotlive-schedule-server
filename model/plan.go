@@ -23,6 +23,9 @@ type Plan struct {
 	// Text 計画ツイートの内容部分
 	// 計画を通知するときに使用する
 	Text string
+	// Additional 追加の計画かどうか
+	// 追加の計画の場合は既存の計画を上書きせずに追加する
+	Additional bool
 }
 
 // PlanEntry 計画のエントリ
