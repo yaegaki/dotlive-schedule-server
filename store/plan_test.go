@@ -39,32 +39,32 @@ func TestPlan(t *testing.T) {
 19:00~ D`,
 	}
 
-	merged := planA.Merge(planB)
-
-	expectIDs := []string{
-		"C", "D", "A", "B",
-	}
-	if len(merged.Entries) != len(expectIDs) {
-		t.Fatal("merge failed")
-	}
-
-	for i, e := range merged.Entries {
-		if expectIDs[i] != e.ActorID {
-			t.Fatalf("id got: %v, expect: %v", expectIDs[i], e.ActorID)
+	test := func(p plan) {
+		expectIDs := []string{
+			"C", "D", "A", "B",
 		}
-	}
+		if len(p.Entries) != len(expectIDs) {
+			t.Fatal("merge failed")
+		}
 
-	expectText := `18:00~ C
+		for i, e := range p.Entries {
+			if expectIDs[i] != e.ActorID {
+				t.Fatalf("id got: %v, expect: %v", e.ActorID, expectIDs[i])
+			}
+		}
+
+		expectText := `18:00~ C
 19:00~ D
 20:00~ A
 21:00~ B`
-	if merged.Text != expectText {
-		t.Fatalf("text got:%v, expect:%v", merged.Text, expectText)
+		if p.Text != expectText {
+			t.Fatalf("text got:%v, expect:%v", p.Text, expectText)
+		}
 	}
 
+	test(planA.Merge(planB))
+	// 逆順にマージしても結果は同じ
+	test(planB.Merge(planA))
 	// 同じ計画をマージしても結果が変わらない
-	merged2 := merged.Merge(planA).Merge(planB)
-	if merged2.Text != expectText {
-		t.Fatalf("text got:%v, expect:%v", merged.Text, expectText)
-	}
+	test(planA.Merge(planB).Merge(planA).Merge(planB))
 }
