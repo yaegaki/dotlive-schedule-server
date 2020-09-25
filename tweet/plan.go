@@ -128,7 +128,7 @@ func ParsePlanTweet(t Tweet, actors model.ActorSlice, strict bool) (model.Plan, 
 				hashTag := string([]rune(line)[hashTagIndex:])
 				// コラボやイベントなどの特殊なハッシュタグ
 				p.Entries = append(p.Entries, model.PlanEntry{
-					ActorID: model.UnknownActorID,
+					ActorID: model.ActorIDUnknown,
 					HashTag: hashTag,
 					StartAt: startAt,
 					// とりあえずYoutubeにしておく

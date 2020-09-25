@@ -2,6 +2,7 @@ package model
 
 import (
 	"testing"
+	"time"
 
 	"github.com/yaegaki/dotlive-schedule-server/jst"
 )
@@ -62,42 +63,138 @@ func TestIsPlanned(t *testing.T) {
 	}
 }
 
-func TestGetEntry(t *testing.T) {
+func TestGetEntryIndex(t *testing.T) {
 	p := CreatePlan(jst.ShortDate(2020, 6, 15), []EntryPart{
 		CreateEntryPart(Suzu, 13, 0),
 		CreateEntryPartMildom(Suzu, 19, 0),
 	})
 
-	e, err := p.GetEntry(Video{
+	index := p.GetEntryIndex(Video{
 		ID:      "mildom",
 		ActorID: Suzu.ID,
 		Source:  VideoSourceMildom,
 		StartAt: jst.Date(2020, 6, 15, 19, 0),
 	})
-	if err != nil {
+	if index < 0 {
 		t.Fatal("not found entry for mildom")
 	}
 
-	if e.Source != VideoSourceMildom {
+	if p.Entries[index].Source != VideoSourceMildom {
 		t.Fatal("invalid video source")
 	}
 
 	p = CreatePlan(jst.ShortDate(2020, 6, 17), []EntryPart{
 		CreateEntryPartBilibili(Siro, 12, 0),
 	})
-	e, err = p.GetEntry(Video{
+	index = p.GetEntryIndex(Video{
 		ID:      "bilibili",
 		ActorID: Siro.ID,
 		Source:  VideoSourceBilibili,
 		StartAt: jst.Date(2020, 6, 16, 20, 0),
 	})
-	if err != nil {
+	if index < 0 {
 		t.Fatal("not found entry for bilibili")
 	}
 
-	if e.Source != VideoSourceBilibili {
+	if p.Entries[index].Source != VideoSourceBilibili {
 		t.Fatal("invalid video source")
 	}
+}
+
+func TestGetEntryIndexUnknownActor(t *testing.T) {
+	d := jst.ShortDate(2020, 9, 24)
+	p := Plan{
+		Date: d,
+		Entries: []PlanEntry{
+			{
+				ActorID: Natori.ID,
+				Source:  VideoSourceYoutube,
+				StartAt: d.Add(10 * time.Hour),
+			},
+			{
+				ActorID: Suzu.ID,
+				Source:  VideoSourceMildom,
+				StartAt: d.Add(20 * time.Hour),
+			},
+			{
+				ActorID: ActorIDUnknown,
+				Source:  VideoSourceYoutube,
+				StartAt: d.Add(20 * time.Hour),
+				HashTag: "#電脳少女ガッチマンV (Siro Channel)",
+			},
+			{
+				ActorID: ActorIDUnknown,
+				Source:  VideoSourceYoutube,
+				StartAt: d.Add(21 * time.Hour),
+				HashTag: "#電脳少女ガッチマンV (ガッチマンVさんチャンネル)",
+			},
+			{
+				ActorID: Iori.ID,
+				Source:  VideoSourceYoutube,
+				StartAt: d.Add(22 * time.Hour),
+			},
+			{
+				ActorID: ActorIDUnknown,
+				Source:  VideoSourceYoutube,
+				StartAt: d.Add(23 * time.Hour),
+				HashTag: "#Vのから騒ぎ",
+			},
+		},
+	}
+
+	test := func(got, expect int) {
+		if got == expect {
+			return
+		}
+		t.Fatalf("Can not get entry, got: %v expect: %v", got, expect)
+	}
+
+	index := p.GetEntryIndex(Video{
+		ActorID: Natori.ID,
+		Source:  VideoSourceYoutube,
+		StartAt: d.Add(10 * time.Hour),
+	})
+	test(index, 0)
+
+	index = p.GetEntryIndex(Video{
+		ActorID: Suzu.ID,
+		Source:  VideoSourceMildom,
+		StartAt: d.Add(20 * time.Hour),
+	})
+	test(index, 1)
+
+	index = p.GetEntryIndex(Video{
+		ActorID:  Siro.ID,
+		Source:   VideoSourceYoutube,
+		StartAt:  d.Add(20 * time.Hour),
+		HashTags: []string{"電脳少女ガッチマンV"},
+	})
+	test(index, 2)
+
+	index = p.GetEntryIndex(Video{
+		ActorID:        ActorIDUnknown,
+		Source:         VideoSourceYoutube,
+		StartAt:        d.Add(21 * time.Hour),
+		RelatedActorID: Siro.ID,
+		HashTags:       []string{"電脳少女ガッチマンV"},
+	})
+	test(index, 3)
+
+	index = p.GetEntryIndex(Video{
+		ActorID: Iori.ID,
+		Source:  VideoSourceYoutube,
+		StartAt: d.Add(22 * time.Hour),
+	})
+	test(index, 4)
+
+	index = p.GetEntryIndex(Video{
+		ActorID:        ActorIDUnknown,
+		Source:         VideoSourceYoutube,
+		StartAt:        d.Add(23 * time.Hour),
+		RelatedActorID: Pino.ID,
+		HashTags:       []string{"Vのから騒ぎ"},
+	})
+	test(index, 5)
 }
 
 // TODO: テスト用パッケージを使う(import cycleになってエラーになるためそのままは使用できない)

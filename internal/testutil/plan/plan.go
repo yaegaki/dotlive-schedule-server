@@ -45,6 +45,18 @@ func CreateEntryPart(actor model.Actor, hour, min int) EntryPart {
 	}
 }
 
+// CreateEntryPartHashTag .
+func CreateEntryPartHashTag(hashTag string, hour, min int) EntryPart {
+	return EntryPart{
+		Actor:     model.Actor{ID: model.ActorIDUnknown},
+		HashTag:   hashTag,
+		Hour:      hour,
+		Min:       min,
+		Source:    model.VideoSourceYoutube,
+		CollaboID: 0,
+	}
+}
+
 // CreateEntryPartCollabo .
 func CreateEntryPartCollabo(actor model.Actor, hour, min int, collaboID int) EntryPart {
 	return EntryPart{
@@ -60,7 +72,7 @@ func CreateEntryPartCollabo(actor model.Actor, hour, min int, collaboID int) Ent
 func CreateEntryPartCollaboHashTag(hour, min int, hashTag string) EntryPart {
 	return EntryPart{
 		Actor: model.Actor{
-			ID: model.UnknownActorID,
+			ID: model.ActorIDUnknown,
 		},
 		HashTag:   hashTag,
 		Hour:      hour,

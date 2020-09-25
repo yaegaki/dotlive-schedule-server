@@ -118,6 +118,61 @@ func TestCreateScheduleInternal(t *testing.T) {
 				createScheduleEntryPart(Suzu.Name, true, "2020-4-19-22-0-suzu", 22, 0),
 			}),
 		},
+		{
+			"2020/9/22",
+			jst.Range{
+				Begin: jst.ShortDate(2020, 9, 21),
+				End:   jst.Date(2020, 9, 22, 23, 59),
+			},
+			jst.Range{
+				Begin: jst.ShortDate(2020, 9, 21),
+				End:   jst.Date(2020, 9, 22, 23, 59),
+			},
+			createScheduleForTest(jst.ShortDate(2020, 9, 22), []scheduleEntryPart{
+				createScheduleEntryPart(Suzu.Name, false, "2020-9-22-2-15-suzu", 2, 15),
+				createScheduleEntryPart("#えるすりー", true, "", 17, 30),
+				createScheduleEntryPartMildom(Futaba.Name, true, "2020-9-22-19-12-futaba", 20, 0),
+				createScheduleEntryPart("#アイシロguys", true, "2020-9-22-20-0-aisiro", 20, 0),
+				createScheduleEntryPart(Pino.Name+" x Matsuri Channel 夏色まつり", true, "2020-9-22-21-58-pinomatsuri", 22, 0),
+			}),
+		},
+		{
+			"2020/9/23",
+			jst.Range{
+				Begin: jst.ShortDate(2020, 9, 22),
+				End:   jst.Date(2020, 9, 23, 23, 59),
+			},
+			jst.Range{
+				Begin: jst.ShortDate(2020, 9, 22),
+				End:   jst.Date(2020, 9, 23, 23, 59),
+			},
+			createScheduleForTest(jst.ShortDate(2020, 9, 23), []scheduleEntryPart{
+				createScheduleEntryPart(Natori.Name, true, "2020-9-23-10-0-natori", 10, 0),
+				createScheduleEntryPart(Natori.Name, false, "2020-9-23-15-10-natori", 15, 10),
+				createScheduleEntryPart("ぽんぽこちゃんねる", false, "2020-9-23-21-0-ponpoko", 21, 0),
+				createScheduleEntryPart("#アイドルスタジアム", true, "", 21, 0),
+				createScheduleEntryPart(Natori.Name, false, "2020-9-23-23-0-natori", 23, 0),
+			}),
+		},
+		{
+			"2020/9/24",
+			jst.Range{
+				Begin: jst.ShortDate(2020, 9, 23),
+				End:   jst.Date(2020, 9, 24, 23, 59),
+			},
+			jst.Range{
+				Begin: jst.ShortDate(2020, 9, 23),
+				End:   jst.Date(2020, 9, 24, 23, 59),
+			},
+			createScheduleForTest(jst.ShortDate(2020, 9, 24), []scheduleEntryPart{
+				createScheduleEntryPart(Natori.Name, true, "2020-9-24-10-0-natori", 10, 0),
+				createScheduleEntryPartMildom(Suzu.Name, true, "2020-9-24-19-50-suzu", 20, 0),
+				createScheduleEntryPart("#電脳少女ガッチマンV (Siro Channel)", true, "2020-9-24-20-0-sirov", 20, 0),
+				createScheduleEntryPart("#電脳少女ガッチマンV (ガッチマンVさんチャンネル)", true, "2020-9-24-21-0-sirov", 21, 0),
+				createScheduleEntryPart(Iori.Name, true, "2020-9-24-22-0-iori", 22, 0),
+				createScheduleEntryPart("#Vのから騒ぎ", true, "2020-9-24-23-0-karasawagi", 23, 0),
+			}),
+		},
 	}
 
 	for _, tt := range tests {
@@ -266,6 +321,24 @@ func getPlans(r jst.Range) []model.Plan {
 			CreateEntryPart(Pino, 21, 0),
 			CreateEntryPart(Suzu, 22, 0),
 		}),
+		CreatePlan(jst.ShortDate(2020, 9, 22), []EntryPart{
+			CreateEntryPartHashTag("#えるすりー", 17, 30),
+			CreateEntryPartHashTag("#アイシロguys", 20, 0),
+			CreateEntryPartMildom(Futaba, 20, 0),
+			CreateEntryPart(Pino, 22, 0),
+		}),
+		CreatePlan(jst.ShortDate(2020, 9, 23), []EntryPart{
+			CreateEntryPart(Natori, 10, 0),
+			CreateEntryPartHashTag("#アイドルスタジアム", 21, 0),
+		}),
+		CreatePlan(jst.ShortDate(2020, 9, 24), []EntryPart{
+			CreateEntryPart(Natori, 10, 0),
+			CreateEntryPartMildom(Suzu, 20, 0),
+			CreateEntryPartHashTag("#電脳少女ガッチマンV (Siro Channel)", 20, 0),
+			CreateEntryPartHashTag("#電脳少女ガッチマンV (ガッチマンVさんチャンネル)", 21, 0),
+			CreateEntryPart(Iori, 22, 0),
+			CreateEntryPartHashTag("#Vのから騒ぎ", 23, 0),
+		}),
 	}
 
 	var results []model.Plan
@@ -349,6 +422,99 @@ func getVideos(r jst.Range) []model.Video {
 			Source:  model.VideoSourceYoutube,
 			StartAt: jst.Date(2020, 4, 25, 12, 0),
 		},
+		{
+			ID:      "2020-9-22-2-15-suzu",
+			ActorID: Suzu.ID,
+			Source:  model.VideoSourceYoutube,
+			StartAt: jst.Date(2020, 9, 22, 2, 15),
+		},
+		{
+			ID:      "2020-9-22-19-12-futaba",
+			ActorID: Futaba.ID,
+			Source:  model.VideoSourceMildom,
+			StartAt: jst.Date(2020, 9, 22, 19, 12),
+		},
+		{
+			ID:             "2020-9-22-20-0-aisiro",
+			ActorID:        model.ActorIDUnknown,
+			Source:         model.VideoSourceYoutube,
+			StartAt:        jst.Date(2020, 9, 22, 20, 0),
+			HashTags:       []string{"アイシロguys"},
+			RelatedActorID: Siro.ID,
+		},
+		{
+			ID:             "2020-9-22-21-58-pinomatsuri",
+			ActorID:        model.ActorIDUnknown,
+			Source:         model.VideoSourceYoutube,
+			StartAt:        jst.Date(2020, 9, 22, 21, 58),
+			RelatedActorID: Pino.ID,
+			OwnerName:      "Matsuri Channel 夏色まつり",
+		},
+		{
+			ID:      "2020-9-23-10-0-natori",
+			ActorID: Natori.ID,
+			Source:  model.VideoSourceYoutube,
+			StartAt: jst.Date(2020, 9, 23, 10, 0),
+		},
+		{
+			ID:      "2020-9-23-15-10-natori",
+			ActorID: Natori.ID,
+			Source:  model.VideoSourceYoutube,
+			StartAt: jst.Date(2020, 9, 23, 15, 10),
+		},
+		{
+			ID:             "2020-9-23-21-0-ponpoko",
+			ActorID:        model.ActorIDUnknown,
+			Source:         model.VideoSourceYoutube,
+			StartAt:        jst.Date(2020, 9, 23, 21, 0),
+			RelatedActorID: Siro.ID,
+			OwnerName:      "ぽんぽこちゃんねる",
+		},
+		{
+			ID:      "2020-9-23-23-0-natori",
+			ActorID: Natori.ID,
+			Source:  model.VideoSourceYoutube,
+			StartAt: jst.Date(2020, 9, 23, 23, 0),
+		},
+		{
+			ID:      "2020-9-24-10-0-natori",
+			ActorID: Natori.ID,
+			Source:  model.VideoSourceYoutube,
+			StartAt: jst.Date(2020, 9, 24, 10, 0),
+		},
+		{
+			ID:      "2020-9-24-19-50-suzu",
+			ActorID: Suzu.ID,
+			Source:  model.VideoSourceMildom,
+			StartAt: jst.Date(2020, 9, 24, 19, 50),
+		},
+		{
+			ID:       "2020-9-24-20-0-sirov",
+			ActorID:  Siro.ID,
+			Source:   model.VideoSourceYoutube,
+			StartAt:  jst.Date(2020, 9, 24, 20, 0),
+			HashTags: []string{"電脳少女ガッチマンV"},
+		},
+		{
+			ID:       "2020-9-24-21-0-sirov",
+			ActorID:  model.ActorIDUnknown,
+			Source:   model.VideoSourceYoutube,
+			StartAt:  jst.Date(2020, 9, 24, 21, 0),
+			HashTags: []string{"電脳少女ガッチマンV"},
+		},
+		{
+			ID:      "2020-9-24-22-0-iori",
+			ActorID: Iori.ID,
+			Source:  model.VideoSourceYoutube,
+			StartAt: jst.Date(2020, 9, 24, 22, 0),
+		},
+		{
+			ID:       "2020-9-24-23-0-karasawagi",
+			ActorID:  model.ActorIDUnknown,
+			Source:   model.VideoSourceYoutube,
+			StartAt:  jst.Date(2020, 9, 24, 23, 0),
+			HashTags: []string{"Vのから騒ぎ"},
+		},
 	}
 
 	var results []model.Video
@@ -388,8 +554,9 @@ func compareSchedule(t *testing.T, got model.Schedule, expect model.Schedule) {
 	}
 
 	expectEntries := createSortedEntries(expect.Entries)
+	gotEntries := createSortedEntries(got.Entries)
 
-	for i, e := range createSortedEntries(got.Entries) {
+	for i, e := range gotEntries {
 		expectEntry := expectEntries[i]
 		if e.ActorName != expectEntry.ActorName {
 			t.Errorf("ActorName, got: %v expect: %v", e.ActorName, expectEntry.ActorName)

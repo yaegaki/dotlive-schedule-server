@@ -234,9 +234,15 @@ func updateVideoStartAt(ctx context.Context, c *firestore.Client, vr *service.Vi
 			continue
 		}
 
-		actor, err := actors.FindActor(v.ActorID)
+		var relatedActorID string
+		if v.IsUnknownActor() {
+			relatedActorID = v.RelatedActorID
+		} else {
+			relatedActorID = v.ActorID
+		}
+		actor, err := actors.FindActor(relatedActorID)
 		if err != nil {
-			log.Printf("Can not get actor %v", v.ActorID)
+			log.Printf("Can not get actor %v", relatedActorID)
 			continue
 		}
 

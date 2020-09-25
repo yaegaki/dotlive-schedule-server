@@ -85,10 +85,6 @@ func pushNotifyVideoInternal(ctx context.Context, msgCli notify.Client, plans []
 	// 現在時間より2時間前の場合は古いので通知しない
 	notifyLimit := now.Add(-2 * time.Hour)
 
-	// 既にプッシュ通知を送った配信者
-	// 同時に複数のプッシュ通知を送らないように制御する
-	notifiedActor := map[string]bool{}
-
 	for _, v := range videos {
 		isPlanned := false
 		startAt := v.StartAt
@@ -96,14 +92,16 @@ func pushNotifyVideoInternal(ctx context.Context, msgCli notify.Client, plans []
 		collaboID := 0
 
 		for _, p := range plans {
-			e, err := p.GetEntry(v)
-			if err != nil {
+			index := p.GetEntryIndex(v)
+			if index < 0 {
 				continue
 			}
 
 			// Entryが見つかった場合は計画配信
 			isPlanned = true
 			targetPlan = p
+
+			e := p.Entries[index]
 
 			// youtube以外は開始時刻を正しく取得できないので開始時刻に補正する
 			if v.Source != model.VideoSourceYoutube {
@@ -129,13 +127,6 @@ func pushNotifyVideoInternal(ctx context.Context, msgCli notify.Client, plans []
 		if !updated {
 			continue
 		}
-
-		if _, ok := notifiedActor[v.ActorID]; ok {
-			log.Printf("Skip notify video because duplicate notification. video:%v acthor:%v", v.ID, v.ActorID)
-			continue
-		}
-
-		notifiedActor[v.ActorID] = true
 
 		if startAt.Before(notifyLimit) {
 			log.Printf("Skip notify video because old. video:%v startAt:%v now:%v", v.ID, startAt, now)
@@ -168,13 +159,43 @@ func pushNotifyVideoInternal(ctx context.Context, msgCli notify.Client, plans []
 				relatedActors = append(relatedActors, actor)
 			}
 		} else {
-			actor, err := actors.FindActor(v.ActorID)
+			var actorID string
+			if v.IsUnknownActor() {
+				actorID = v.RelatedActorID
+			} else {
+				actorID = v.ActorID
+			}
+			actor, err := actors.FindActor(actorID)
 			if err != nil {
-				log.Printf("Unknown actor %v", actor.ID)
+				log.Printf("Unknown actor %v", actorID)
 				continue
 			}
 
 			relatedActors = append(relatedActors, actor)
+
+			// relatedActorIDsが存在する場合は追加する
+			// ただし既に追加されている場合は無視
+			for _, relatedActorID := range v.RelatedActorIDs {
+				found := false
+				for _, temp := range relatedActors {
+					if temp.ID == relatedActorID {
+						found = true
+						break
+					}
+				}
+
+				if found {
+					continue
+				}
+
+				actor, err := actors.FindActor(relatedActorID)
+				if err != nil {
+					log.Printf("Unknown relatedActor %v", relatedActorID)
+					continue
+				}
+
+				relatedActors = append(relatedActors, actor)
+			}
 		}
 
 		log.Printf("push notify video: %v, %v, isPlanned:%v, isLive:%v isCollabo:%v", v.ID, v.Text, isPlanned, v.IsLive, collaboID > 0)

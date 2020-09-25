@@ -1,9 +1,9 @@
 package model
 
 import (
+	"strings"
 	"time"
 
-	"github.com/yaegaki/dotlive-schedule-server/common"
 	"github.com/yaegaki/dotlive-schedule-server/jst"
 )
 
@@ -47,14 +47,40 @@ type PlanEntry struct {
 
 // IsPlanned 計画配信かどうか
 func (p Plan) IsPlanned(v Video) bool {
-	_, err := p.GetEntry(v)
-	return err == nil
+	return p.GetEntryIndex(v) >= 0
 }
 
-// GetEntry 指定された動画が計画されたものならそのエントリを取得する
-func (p Plan) GetEntry(v Video) (PlanEntry, error) {
-	for _, e := range p.Entries {
-		if e.ActorID != v.ActorID {
+// GetEntryIndex 指定された動画が計画されたものならエントリーのインデックスを取得する
+// 計画されていない場合は-1を返す
+func (p Plan) GetEntryIndex(v Video) int {
+	videoIsUnknownActor := v.IsUnknownActor()
+
+	for i, e := range p.Entries {
+		if !e.within(v.Source, v.StartAt) {
+			continue
+		}
+
+		entryIsUnknownActor := e.IsUnknownActor()
+		// 計画がUnknownの場合はハッシュタグで判定する
+		if entryIsUnknownActor {
+			for _, hashtag := range v.HashTags {
+				if strings.Index(e.HashTag, hashtag) >= 0 {
+					return i
+				}
+			}
+
+			continue
+		}
+
+		var videoActorID string
+		// 動画がUnknownの場合はRelatedActorIDを配信者IDとして判定する
+		if videoIsUnknownActor {
+			videoActorID = v.RelatedActorID
+		} else {
+			videoActorID = v.ActorID
+		}
+
+		if videoActorID != e.ActorID {
 			continue
 		}
 
@@ -62,30 +88,35 @@ func (p Plan) GetEntry(v Video) (PlanEntry, error) {
 			continue
 		}
 
-		var planRange jst.Range
-		if v.Source == VideoSourceYoutube {
-			// 計画から+-30分以内なら計画通りとする
-			planRange = jst.Range{
-				Begin: e.StartAt.Add(-30 * time.Minute),
-				End:   e.StartAt.Add(30 * time.Minute),
-			}
-		} else {
-			// Youtube以外は開始時刻が正確にとれないので計画の時間から-26h~+30minまでは計画通りとする
-			// 1日1回、2日連続はないという前提
-			beginDate := e.StartAt.Add(-26 * time.Hour)
-			endDate := e.StartAt.Add(30 * time.Minute)
-			planRange = jst.Range{
-				Begin: beginDate,
-				End:   endDate,
-			}
-		}
-
-		if !planRange.In(v.StartAt) {
-			continue
-		}
-
-		return e, nil
+		return i
 	}
 
-	return PlanEntry{}, common.ErrNotFound
+	return -1
+}
+
+// IsUnknownActor 配信者不明かどうか
+func (e PlanEntry) IsUnknownActor() bool {
+	return e.ActorID == ActorIDUnknown
+}
+
+func (e PlanEntry) within(videoSource string, t jst.Time) bool {
+	var planRange jst.Range
+	if videoSource == VideoSourceYoutube {
+		// 計画から+-30分以内なら計画通りとする
+		planRange = jst.Range{
+			Begin: e.StartAt.Add(-30 * time.Minute),
+			End:   e.StartAt.Add(30 * time.Minute),
+		}
+	} else {
+		// Youtube以外は開始時刻が正確にとれないので計画の時間から-26h~+30minまでは計画通りとする
+		// 1日1回、2日連続はないという前提
+		beginDate := e.StartAt.Add(-26 * time.Hour)
+		endDate := e.StartAt.Add(30 * time.Minute)
+		planRange = jst.Range{
+			Begin: beginDate,
+			End:   endDate,
+		}
+	}
+
+	return planRange.In(t)
 }

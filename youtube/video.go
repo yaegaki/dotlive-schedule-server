@@ -31,7 +31,7 @@ func IsYoutubeURL(url string) bool {
 }
 
 // FindVideo youtubeのURLから動画情報を取得する
-func FindVideo(ctx context.Context, s *y.Service, youtubeURL string, actor model.Actor) (model.Video, error) {
+func FindVideo(ctx context.Context, s *y.Service, youtubeURL string, relatedActor model.Actor) (model.Video, error) {
 	u, err := url.Parse(youtubeURL)
 	if err != nil {
 		return model.Video{}, err
@@ -46,8 +46,12 @@ func FindVideo(ctx context.Context, s *y.Service, youtubeURL string, actor model
 		videoID = xs[len(xs)-1]
 	}
 
+	// コラボで他の配信者の枠の場合
+	isCollaboVideo := false
+
 	var item *y.Video
 	retry := 0
+	videoOwnerName := relatedActor.Name
 	for {
 		res, err := s.Videos.List("snippet,contentDetails,liveStreamingDetails").Id(videoID).Do()
 		if err != nil {
@@ -65,18 +69,30 @@ func FindVideo(ctx context.Context, s *y.Service, youtubeURL string, actor model
 		}
 
 		item = res.Items[0]
-		if item.Snippet.ChannelId != actor.YoutubeChannelID {
-			return model.Video{}, common.ErrInvalidChannel
+		if item.Snippet.ChannelId != relatedActor.YoutubeChannelID {
+			if hasYoutubeChannelLink(item.Snippet.Description, relatedActor.YoutubeChannelID) {
+				isCollaboVideo = true
+				videoOwnerName = item.Snippet.ChannelTitle
+			} else {
+				return model.Video{}, common.ErrInvalidChannel
+			}
 		}
 
 		break
 	}
 
 	v := model.Video{
-		ID:      videoID + "-Youtube",
-		ActorID: actor.ID,
-		Source:  model.VideoSourceYoutube,
-		URL:     youtubeURL,
+		ID:        videoID + "-Youtube",
+		Source:    model.VideoSourceYoutube,
+		URL:       youtubeURL,
+		OwnerName: videoOwnerName,
+	}
+
+	if isCollaboVideo {
+		v.ActorID = model.ActorIDUnknown
+		v.RelatedActorID = relatedActor.ID
+	} else {
+		v.ActorID = relatedActor.ID
 	}
 
 	var startAt time.Time
@@ -109,4 +125,10 @@ func FindVideo(ctx context.Context, s *y.Service, youtubeURL string, actor model
 	v.StartAt = jst.From(startAt)
 
 	return v, nil
+}
+
+// hasYoutubeChannelLink 文字列中にyoutubeのチャンネルIDへのリンクが含まれているかどうか
+func hasYoutubeChannelLink(text string, channelID string) bool {
+	link := "https://www.youtube.com/channel/" + channelID
+	return strings.Index(text, link) >= 0
 }

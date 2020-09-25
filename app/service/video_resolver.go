@@ -71,6 +71,7 @@ func (r *VideoResolver) Resolve(tweet tweet.Tweet, url string, actor model.Actor
 		return xerrors.Errorf("Can not get video(%v): %w", url, err)
 	}
 	v.Text = tweet.Text
+	v.HashTags = tweet.HashTags
 
 	err = r.save(v, tweet)
 	if err != nil {

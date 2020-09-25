@@ -44,31 +44,60 @@ func createEmptySchedule(date jst.Time) model.Schedule {
 	}
 }
 
-func createScheduleInternal(date jst.Time, plans []model.Plan, videos []model.Video, actors []model.Actor) model.Schedule {
-	var targetPlan model.Plan
-	found := false
+type multiPlan struct {
+	prev model.Plan
+	cur  model.Plan
+	next model.Plan
+}
+
+func (p multiPlan) isPrevPlanned(v model.Video) bool {
+	return p.prev.IsPlanned(v)
+}
+
+func (p multiPlan) GetEntryIndex(v model.Video) int {
+	return p.cur.GetEntryIndex(v)
+}
+
+func (p multiPlan) isNextPlanned(v model.Video) bool {
+	return p.next.IsPlanned(v)
+}
+
+func createMultiPlan(date jst.Time, plans []model.Plan) multiPlan {
+	result := multiPlan{
+		prev: model.Plan{
+			Date: jst.ShortDate(date.Year(), date.Month(), date.Day()-1),
+		},
+		cur: model.Plan{
+			Date: date,
+		},
+		next: model.Plan{
+			Date: jst.ShortDate(date.Year(), date.Month(), date.Day()+1),
+		},
+	}
+
 	for _, p := range plans {
-		if date.Equal(p.Date) {
-			found = true
-			targetPlan = p
+		if p.Date.Before(date) {
+			result.prev = p
+		} else if p.Date.Equal(date) {
+			result.cur = p
+		} else {
+			result.next = p
 			break
 		}
 	}
 
-	if !found {
-		// 計画が見つからなくてもゲリラのみが存在する可能性があるので
-		// 空の計画を作る
-		targetPlan = model.Plan{
-			Date: date,
-		}
-	}
+	return result
+}
+
+func createScheduleInternal(date jst.Time, plans []model.Plan, videos []model.Video, actors []model.Actor) model.Schedule {
+	plan := createMultiPlan(date, plans)
 
 	scheduleRange := jst.Range{
-		Begin: targetPlan.Date,
-		End:   targetPlan.Date.AddOneDay().Add(-1 * time.Second),
+		Begin: plan.cur.Date,
+		End:   plan.cur.Date.AddOneDay().Add(-1 * time.Second),
 	}
 
-	for _, e := range targetPlan.Entries {
+	for _, e := range plan.cur.Entries {
 		// 25時などが指定されている場合はスケジュールの終了時間を延ばす
 		if e.StartAt.After(scheduleRange.End) {
 			scheduleRange.End = e.StartAt
@@ -76,8 +105,96 @@ func createScheduleInternal(date jst.Time, plans []model.Plan, videos []model.Vi
 	}
 
 	entries := []model.ScheduleEntry{}
-	var addedPlanEntries []model.PlanEntry
-	var addedCollaboEntries []model.ScheduleEntry
+	var addedPlanEntries []int
+
+	const dotliveIcon = "https://pbs.twimg.com/profile_images/953977243251822593/tglswtot.jpg"
+	addScheduleEntry := func(index int, v model.Video) {
+		var actorName string
+		var icon string
+		var startAt jst.Time
+		var collaboID int
+		var isPlanned bool
+
+		if index < 0 {
+			if v.IsUnknownActor() {
+				actorName = v.OwnerName
+				icon = dotliveIcon
+			} else {
+				actor, err := findActorByID(actors, v.ActorID)
+				if err != nil {
+					log.Printf("Unknown actorID: %v, videoID: %v", v.ActorID, v.ID)
+					return
+				}
+				actorName = actor.Name
+				icon = actor.Icon
+			}
+			startAt = v.StartAt
+			collaboID = 0
+			isPlanned = false
+
+			// シロちゃんの動画は常に計画されているとする
+			const siroID = "lLhToxu1Kyxuwwygh0FK"
+			if v.ActorID == siroID && !v.IsLive {
+				isPlanned = true
+			}
+		} else {
+			pe := plan.cur.Entries[index]
+
+			alreadyAddedEntry := false
+			for _, added := range addedPlanEntries {
+				if index == added {
+					alreadyAddedEntry = true
+				}
+			}
+
+			if alreadyAddedEntry {
+				startAt = v.StartAt
+			} else {
+				// 初めて追加する場合は開始時刻を計画の時間に合わせる
+				startAt = pe.StartAt
+				addedPlanEntries = append(addedPlanEntries, index)
+			}
+
+			if pe.IsUnknownActor() {
+				actorName = pe.HashTag
+				icon = dotliveIcon
+			} else if v.IsUnknownActor() {
+				relatedActor, err := findActorByID(actors, v.RelatedActorID)
+				if err != nil {
+					log.Printf("Unknown relatedActorID: %v", v.RelatedActorID)
+					return
+				}
+
+				actorName = relatedActor.Name + " x " + v.OwnerName
+				icon = relatedActor.Icon
+			} else {
+				actor, err := findActorByID(actors, v.ActorID)
+				if err != nil {
+					log.Printf("Unknown actorID: %v, videoID: %v", v.ActorID, v.ID)
+					return
+				}
+				actorName = actor.Name
+				icon = actor.Icon
+			}
+			collaboID = pe.CollaboID
+			isPlanned = true
+		}
+
+		se := model.ScheduleEntry{
+			ActorName: actorName,
+			Note:      createNote(isPlanned, v.Source),
+			Icon:      icon,
+			StartAt:   startAt,
+			Planned:   isPlanned,
+			IsLive:    v.IsLive,
+			Text:      v.Text,
+			URL:       v.URL,
+			VideoID:   v.ID,
+			Source:    v.Source,
+			CollaboID: collaboID,
+		}
+		entries = append(entries, se)
+	}
 
 	// 開始順にソートする
 	videos = append([]model.Video{}, videos...)
@@ -86,125 +203,40 @@ func createScheduleInternal(date jst.Time, plans []model.Plan, videos []model.Vi
 	})
 
 	for _, v := range videos {
-		yesterdayPlanned := false
 		// 前日に予定された配信かどうか
-		for _, p := range plans {
-			if p.Date.Equal(targetPlan.Date) {
-				break
-			}
-
-			if p.IsPlanned(v) {
-				yesterdayPlanned = true
-				break
-			}
-		}
-
-		if yesterdayPlanned {
+		if plan.isPrevPlanned(v) {
 			continue
 		}
 
-		var isPlanned bool
-		startAt := v.StartAt
-		pe, err := targetPlan.GetEntry(v)
-		if err == nil {
-			isPlanned = true
-			found := false
-			for _, temp := range addedPlanEntries {
-				if temp.ActorID == v.ActorID && pe.StartAt.Equal(temp.StartAt) {
-					found = true
-					break
-				}
-			}
-
-			// 計画されている場合はその時間に合わせる
-			// ただし、既にその計画に対してエントリが追加されている場合は時間を補正しない
-			if !found {
-				startAt = pe.StartAt
-			}
-			addedPlanEntries = append(addedPlanEntries, pe)
-		} else {
-			isPlanned = false
-
+		peIndex := plan.GetEntryIndex(v)
+		if peIndex < 0 {
+			// 今日のものか
 			if !scheduleRange.In(v.StartAt) {
 				continue
 			}
 
-			// 明日の計画を確認してゲリラ配信かどうか確認する
-			tommorowPlanned := false
-			after := false
-			for _, p := range plans {
-				if after {
-					if p.IsPlanned(v) {
-						tommorowPlanned = true
-						break
-					}
-				} else {
-					after = p.Date.Equal(targetPlan.Date)
-				}
-			}
-
-			if tommorowPlanned {
+			// 明日に予定されているか
+			if plan.isNextPlanned(v) {
 				continue
 			}
 		}
 
-		actor, err := findActorByID(actors, v.ActorID)
-		if err != nil {
-			log.Printf("Unknown actorID: %v", v.ActorID)
-			continue
-		}
-
-		// シロちゃんの動画は常に計画されているとする
-		const siroID = "lLhToxu1Kyxuwwygh0FK"
-		if v.ActorID == siroID && !v.IsLive {
-			isPlanned = true
-		}
-
-		se := model.ScheduleEntry{
-			ActorName: actor.Name,
-			Note:      createNote(isPlanned, v.Source),
-			Icon:      actor.Icon,
-			StartAt:   startAt,
-			Planned:   isPlanned,
-			IsLive:    v.IsLive,
-			Text:      v.Text,
-			URL:       v.URL,
-			VideoID:   v.ID,
-			Source:    v.Source,
-			CollaboID: pe.CollaboID,
-		}
-		entries = append(entries, se)
-
-		if se.CollaboID > 0 {
-			addedCollaboEntries = append(addedCollaboEntries, se)
-		}
+		addScheduleEntry(peIndex, v)
 	}
 
-	for _, e := range targetPlan.Entries {
-		found := false
+LOOP_ENTRIES:
+	for i, e := range plan.cur.Entries {
 		for _, added := range addedPlanEntries {
-			if e.ActorID == added.ActorID && e.StartAt.Equal(added.StartAt) {
-				found = true
-				break
+			if i == added {
+				continue LOOP_ENTRIES
 			}
 		}
 
-		if found {
-			continue
-		}
-
-		se := model.ScheduleEntry{
-			StartAt:   e.StartAt,
-			Planned:   true,
-			Source:    e.Source,
-			CollaboID: e.CollaboID,
-		}
-
-		if e.ActorID == model.UnknownActorID {
-			se.ActorName = e.HashTag
-			// .LIVE【どっとライブ】のアイコン
-			// TODO: アイコンをどうするか
-			se.Icon = "https://pbs.twimg.com/profile_images/953977243251822593/tglswtot.jpg"
+		var actorName string
+		var icon string
+		if e.IsUnknownActor() {
+			actorName = e.HashTag
+			icon = dotliveIcon
 		} else {
 			actor, err := findActorByID(actors, e.ActorID)
 			if err != nil {
@@ -212,19 +244,33 @@ func createScheduleInternal(date jst.Time, plans []model.Plan, videos []model.Vi
 				continue
 			}
 
-			se.ActorName = actor.Name
-			se.Icon = actor.Icon
-			se.Note = createNote(true, e.Source)
+			actorName = actor.Name
+			icon = actor.Icon
 		}
+
+		se := model.ScheduleEntry{
+			ActorName: actorName,
+			Icon:      icon,
+			StartAt:   e.StartAt,
+			Planned:   true,
+			Source:    e.Source,
+			Note:      createNote(true, e.Source),
+			CollaboID: e.CollaboID,
+		}
+
 		entries = append(entries, se)
 	}
 
 	// コラボの場合はチャンネル主のエントリで他の人のエントリを上書きする
 	// 複数チャンネルで行っているコラボの場合はツイートのタイミング次第で
 	// エントリの内容が変わる可能性があるが許容する
-	for _, se := range addedCollaboEntries {
+	for _, collaboEntry := range entries {
+		if collaboEntry.CollaboID <= 0 || collaboEntry.VideoID == "" {
+			continue
+		}
+
 		for i, target := range entries {
-			if target.CollaboID != se.CollaboID {
+			if target.CollaboID != collaboEntry.CollaboID {
 				continue
 			}
 
@@ -232,7 +278,7 @@ func createScheduleInternal(date jst.Time, plans []model.Plan, videos []model.Vi
 				continue
 			}
 
-			temp := se
+			temp := collaboEntry
 			temp.ActorName = target.ActorName
 			temp.Icon = target.Icon
 			entries[i] = temp
@@ -244,8 +290,8 @@ func createScheduleInternal(date jst.Time, plans []model.Plan, videos []model.Vi
 	})
 
 	return model.Schedule{
-		Date:    targetPlan.Date,
-		TweetID: targetPlan.SourceID,
+		Date:    plan.cur.Date,
+		TweetID: plan.cur.SourceID,
 		Entries: entries,
 	}
 }

@@ -2,8 +2,10 @@ package model
 
 import "github.com/yaegaki/dotlive-schedule-server/common"
 
-// UnknownActorID 配信者が分からない場合のID
-const UnknownActorID = "UNKNOWN"
+const (
+	// ActorIDUnknown コラボの時のID
+	ActorIDUnknown = "UNKNOWN"
+)
 
 // Actor 配信者
 type Actor struct {

@@ -31,6 +31,14 @@ type video struct {
 	Notified bool `firestore:"notified"`
 	// StartAt 配信開始時刻
 	StartAt time.Time `firestore:"startAt"`
+	// RelatedActorID 関連する配信者ID
+	RelatedActorID string `firestore:"relatedActorID"`
+	// RelatedActorIDs 関連する配信者IDの配列
+	RelatedActorIDs []string `firestore:"relatedActorIDs"`
+	// OwnerName 動画配信者の名前
+	OwnerName string `firestore:"ownerName"`
+	// HashTags ハッシュタグ
+	HashTags []string `firestore:"hashTags"`
 }
 
 const collectionNameVideo = "Video"
@@ -87,12 +95,43 @@ func SaveVideo(ctx context.Context, c *firestore.Client, v model.Video, override
 			}
 
 			temp.Notified = oldVideo.Notified
+			temp.RelatedActorIDs = createRelatedActorIDs(temp, oldVideo)
 		} else if status.Code(err) != codes.NotFound {
 			return err
 		}
 
 		return t.Set(c.Collection(collectionNameVideo).Doc(v.ID), temp)
 	})
+}
+
+func createRelatedActorIDs(v1 video, v2 video) []string {
+	var result []string
+	add := func(id string) {
+		if id == "" || id == model.ActorIDUnknown {
+			return
+		}
+		for _, temp := range result {
+			if temp == id {
+				return
+			}
+		}
+		result = append(result, id)
+	}
+
+	add(v1.ActorID)
+	add(v1.RelatedActorID)
+
+	for _, actorID := range v1.RelatedActorIDs {
+		add(actorID)
+	}
+
+	add(v2.ActorID)
+	add(v2.RelatedActorID)
+
+	for _, actorID := range v2.RelatedActorIDs {
+		add(actorID)
+	}
+	return result
 }
 
 // MarkVideoAsNotified 計画を通知済みとする
@@ -138,26 +177,34 @@ func MarkVideoAsNotified(ctx context.Context, c *firestore.Client, v model.Video
 
 func fromVideo(v model.Video) video {
 	return video{
-		id:       v.ID,
-		ActorID:  v.ActorID,
-		Source:   v.Source,
-		URL:      v.URL,
-		Text:     v.Text,
-		IsLive:   v.IsLive,
-		Notified: v.Notified,
-		StartAt:  v.StartAt.Time(),
+		id:              v.ID,
+		ActorID:         v.ActorID,
+		Source:          v.Source,
+		URL:             v.URL,
+		Text:            v.Text,
+		IsLive:          v.IsLive,
+		Notified:        v.Notified,
+		StartAt:         v.StartAt.Time(),
+		RelatedActorID:  v.RelatedActorID,
+		RelatedActorIDs: v.RelatedActorIDs,
+		OwnerName:       v.OwnerName,
+		HashTags:        v.HashTags,
 	}
 }
 
 func (v video) Video() model.Video {
 	return model.Video{
-		ID:       v.id,
-		ActorID:  v.ActorID,
-		Source:   v.Source,
-		URL:      v.URL,
-		Text:     v.Text,
-		IsLive:   v.IsLive,
-		Notified: v.Notified,
-		StartAt:  jst.From(v.StartAt),
+		ID:              v.id,
+		ActorID:         v.ActorID,
+		Source:          v.Source,
+		URL:             v.URL,
+		Text:            v.Text,
+		IsLive:          v.IsLive,
+		Notified:        v.Notified,
+		StartAt:         jst.From(v.StartAt),
+		RelatedActorID:  v.RelatedActorID,
+		RelatedActorIDs: v.RelatedActorIDs,
+		OwnerName:       v.OwnerName,
+		HashTags:        v.HashTags,
 	}
 }

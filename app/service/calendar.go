@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"log"
 	"time"
 
 	"cloud.google.com/go/firestore"
@@ -41,6 +42,10 @@ func CreateCalendar(ctx context.Context, client *firestore.Client, baseDate jst.
 	if err != nil && err != common.ErrNotFound {
 		return model.Calendar{}, err
 	}
+	videoMap := map[string]model.Video{}
+	for _, v := range videos {
+		videoMap[v.ID] = v
+	}
 
 	// 2日以上前は確実にFixされている
 	fixedDayLimit := now.AddDay(-2)
@@ -56,20 +61,19 @@ func CreateCalendar(ctx context.Context, client *firestore.Client, baseDate jst.
 
 		s := createScheduleInternal(d, plans, videos, actors)
 		actorIDs := []string{}
-	OUTER:
 		for _, e := range s.Entries {
-			a, err := actors.FindActorByName(e.ActorName)
-			if err != nil {
-				continue
-			}
+			relatedActors := findActorsByScheduleEntry(e, videoMap, actors)
 
-			for _, id := range actorIDs {
-				if id == a.ID {
-					continue OUTER
+		OUTER:
+			for _, relatedActor := range relatedActors {
+				for _, id := range actorIDs {
+					if relatedActor.ID == id {
+						continue OUTER
+					}
 				}
-			}
 
-			actorIDs = append(actorIDs, a.ID)
+				actorIDs = append(actorIDs, relatedActor.ID)
+			}
 		}
 
 		if len(actorIDs) == 0 {
@@ -83,4 +87,60 @@ func CreateCalendar(ctx context.Context, client *firestore.Client, baseDate jst.
 	}
 
 	return calendar, nil
+}
+
+func findActorsByScheduleEntry(se model.ScheduleEntry, videoMap map[string]model.Video, actors model.ActorSlice) model.ActorSlice {
+	if se.VideoID != "" {
+		return findActorsByVideoID(se.VideoID, videoMap, actors)
+	}
+
+	actor, err := actors.FindActorByName(se.ActorName)
+	if err != nil {
+		return nil
+	}
+
+	return model.ActorSlice{actor}
+}
+
+func findActorsByVideoID(videoID string, videoMap map[string]model.Video, actors model.ActorSlice) model.ActorSlice {
+	var result model.ActorSlice
+	v, ok := videoMap[videoID]
+	if !ok {
+		return result
+	}
+
+	if v.IsUnknownActor() {
+		actor, err := actors.FindActor(v.RelatedActorID)
+		if err == nil {
+			result = append(result, actor)
+		} else {
+			log.Printf("Unknown actor: %v", v.ActorID)
+		}
+
+		// 関連する配信者が二人以上いる場合
+		// RelatedActorIDsにはRelatedActorIDが含まれる場合とそうでない場合がある
+	RELATED_ACTORID_LOOP:
+		for _, relatedActorID := range v.RelatedActorIDs {
+			for _, temp := range result {
+				if temp.ID == relatedActorID {
+					continue RELATED_ACTORID_LOOP
+				}
+			}
+
+			actor, err = actors.FindActor(relatedActorID)
+			if err != nil {
+				log.Printf("Unknown actor: %v", relatedActorID)
+				continue
+			}
+			result = append(result, actor)
+		}
+	} else {
+		actor, err := actors.FindActor(v.ActorID)
+		if err != nil {
+			log.Printf("Unknown actor: %v", v.ActorID)
+		}
+		result = append(result, actor)
+	}
+
+	return result
 }

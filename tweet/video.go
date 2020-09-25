@@ -29,30 +29,23 @@ func ResolveVideos(api *anaconda.TwitterApi, actors []model.Actor, r VideoResolv
 		hasError := false
 		lastTweetID := ""
 
-	FOR_TWEET:
 		for _, tweet := range tl {
 			if lastTweetID == "" {
 				lastTweetID = tweet.ID
 			}
 
-			except := false
-			for _, url := range tweet.URLs {
-				except = r.Except(url)
-				if except {
-					break
-				}
+			err := resolveVideoForTweet(r, actor, tweet)
+			if err != nil {
+				log.Printf("Can not resolve video for %v: %v", actor.Name, err)
+				break
 			}
 
-			if except {
-				continue
-			}
-
-			for _, url := range tweet.URLs {
-				err := r.Resolve(tweet, url, actor)
+			if tweet.QuotedTweet != nil {
+				err = resolveVideoForTweet(r, actor, *tweet.QuotedTweet)
 				if err != nil {
-					log.Printf("Can not resolve video for %v: %v", actor.Name, err)
-					hasError = true
-					break FOR_TWEET
+
+					log.Printf("(QuatedTweet)Can not resolve video for %v: %v", actor.Name, err)
+					break
 				}
 			}
 		}
@@ -70,4 +63,27 @@ func ResolveVideos(api *anaconda.TwitterApi, actors []model.Actor, r VideoResolv
 			log.Printf("Can not mark last tweetID for %v: %v", actor.Name, err)
 		}
 	}
+}
+
+func resolveVideoForTweet(r VideoResolver, actor model.Actor, tweet Tweet) error {
+	except := false
+	for _, url := range tweet.URLs {
+		except = r.Except(url)
+		if except {
+			break
+		}
+	}
+
+	if except {
+		return nil
+	}
+
+	for _, url := range tweet.URLs {
+		err := r.Resolve(tweet, url, actor)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
