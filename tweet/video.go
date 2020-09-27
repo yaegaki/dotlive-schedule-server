@@ -37,14 +37,15 @@ func ResolveVideos(api *anaconda.TwitterApi, actors []model.Actor, r VideoResolv
 			err := resolveVideoForTweet(r, actor, tweet)
 			if err != nil {
 				log.Printf("Can not resolve video for %v: %v", actor.Name, err)
+				hasError = true
 				break
 			}
 
 			if tweet.QuotedTweet != nil {
 				err = resolveVideoForTweet(r, actor, *tweet.QuotedTweet)
 				if err != nil {
-
 					log.Printf("(QuatedTweet)Can not resolve video for %v: %v", actor.Name, err)
+					hasError = true
 					break
 				}
 			}
