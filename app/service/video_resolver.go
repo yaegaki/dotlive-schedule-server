@@ -54,7 +54,7 @@ func (r *VideoResolver) Resolve(tweet tweet.Tweet, url string, actor model.Actor
 	var err error
 
 	if youtube.IsYoutubeURL(url) {
-		v, err = youtube.FindVideo(r.ctx, r.youtubeService, url, actor)
+		v, err = youtube.FindVideo(r.ctx, r.youtubeService, url, actor, tweet.Date)
 	} else if bilibili.IsBilibiliURL(url) {
 		v, err = bilibili.FindVideo(url, actor, tweet.Date)
 	} else if mildom.IsMildomURL(url) {

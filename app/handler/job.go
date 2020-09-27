@@ -246,7 +246,7 @@ func updateVideoStartAt(ctx context.Context, c *firestore.Client, vr *service.Vi
 			continue
 		}
 
-		newVideo, err := youtube.FindVideo(ctx, vr.YoutubeService(), v.URL, actor)
+		newVideo, err := youtube.FindVideo(ctx, vr.YoutubeService(), v.URL, actor, now)
 		if err != nil {
 			log.Printf("Can not get video info %v: %v", v.ID, err)
 			continue

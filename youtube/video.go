@@ -31,7 +31,7 @@ func IsYoutubeURL(url string) bool {
 }
 
 // FindVideo youtubeのURLから動画情報を取得する
-func FindVideo(ctx context.Context, s *y.Service, youtubeURL string, relatedActor model.Actor) (model.Video, error) {
+func FindVideo(ctx context.Context, s *y.Service, youtubeURL string, relatedActor model.Actor, tweetDate jst.Time) (model.Video, error) {
 	u, err := url.Parse(youtubeURL)
 	if err != nil {
 		return model.Video{}, err
@@ -99,21 +99,35 @@ func FindVideo(ctx context.Context, s *y.Service, youtubeURL string, relatedActo
 	if item.LiveStreamingDetails != nil {
 		// プレミア公開の場合もLiveStreamingDetailsが存在する
 		v.IsLive = true
-		startAt, err = time.Parse(time.RFC3339, item.LiveStreamingDetails.ScheduledStartTime)
-		if err != nil {
-			return model.Video{}, err
+		hasScheduledStartTime := false
+		// ScheduledStartTimeが存在しない場合があるのでチェックする
+		if item.LiveStreamingDetails.ScheduledStartTime != "" {
+			startAt, err = time.Parse(time.RFC3339, item.LiveStreamingDetails.ScheduledStartTime)
+			if err != nil {
+				return model.Video{}, err
+			}
+			hasScheduledStartTime = true
 		}
 
 		// 既に始まってる場合。
+		hasActualStartTime := false
 		if item.LiveStreamingDetails.ActualStartTime != "" {
 			actualStartAt, err := time.Parse(time.RFC3339, item.LiveStreamingDetails.ActualStartTime)
 			if err != nil {
 				return model.Video{}, err
 			}
 
-			if actualStartAt.Before(startAt) {
+			if !hasScheduledStartTime || actualStartAt.Before(startAt) {
 				startAt = actualStartAt
 			}
+			hasActualStartTime = true
+		}
+
+		// どっちも見つからない場合
+		// 存在するかわからないが一応対策しておく
+		if !hasScheduledStartTime && !hasActualStartTime {
+			startAt = tweetDate.Time()
+			log.Printf("warning: not found startTime for id: %v", videoID)
 		}
 	} else {
 		startAt, err = time.Parse(time.RFC3339, item.Snippet.PublishedAt)
