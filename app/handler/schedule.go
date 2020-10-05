@@ -2,6 +2,7 @@ package handler
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
@@ -34,7 +35,11 @@ func scheduleHandler(c echo.Context) error {
 		return c.String(http.StatusInternalServerError, "error2")
 	}
 
-	s, _ := service.CreateSchedule(ctx, client, now, actors)
+	s, err := service.CreateSchedule(ctx, client, now, actors)
+	if err != nil {
+		log.Printf("can not create schedule: %v", err)
+		return c.String(http.StatusInternalServerError, "error3")
+	}
 	bytes, _ := json.Marshal(s)
 	return c.JSONBlob(http.StatusOK, bytes)
 }
