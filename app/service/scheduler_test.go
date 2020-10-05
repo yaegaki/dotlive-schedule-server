@@ -173,6 +173,26 @@ func TestCreateScheduleInternal(t *testing.T) {
 				createScheduleEntryPart("#Vのから騒ぎ", true, "2020-9-24-23-0-karasawagi", 23, 0),
 			}),
 		},
+		// 予定表に入っていないmildomはスケジュールに出さない
+		// mildomは動画情報が誤って登録されている可能性がある
+		{
+			"2020/10/5",
+			jst.Range{
+				Begin: jst.ShortDate(2020, 10, 4),
+				End:   jst.Date(2020, 10, 5, 23, 59),
+			},
+			jst.Range{
+				Begin: jst.ShortDate(2020, 10, 4),
+				End:   jst.Date(2020, 10, 5, 23, 59),
+			},
+			createScheduleForTest(jst.ShortDate(2020, 10, 5), []scheduleEntryPart{
+				createScheduleEntryPartBilibili(Siro.Name, true, "2020-10-5-19-0-siro", 19, 0),
+				createScheduleEntryPartMildom(Mememe.Name, true, "2020-10-5-19-0-mememe", 19, 0),
+				createScheduleEntryPart(Iori.Name, true, "2020-10-5-21-0-iori", 21, 0),
+				createScheduleEntryPart(Natori.Name, true, "2020-10-5-22-0-natori", 22, 0),
+				createScheduleEntryPart(Pino.Name, true, "2020-10-5-23-0-pino", 23, 0),
+			}),
+		},
 	}
 
 	for _, tt := range tests {
@@ -338,6 +358,13 @@ func getPlans(r jst.Range) []model.Plan {
 			CreateEntryPartHashTag("#電脳少女ガッチマンV (ガッチマンVさんチャンネル)", 21, 0),
 			CreateEntryPart(Iori, 22, 0),
 			CreateEntryPartHashTag("#Vのから騒ぎ", 23, 0),
+		}),
+		CreatePlan(jst.ShortDate(2020, 10, 5), []EntryPart{
+			CreateEntryPartBilibili(Siro, 19, 0),
+			CreateEntryPartMildom(Mememe, 19, 0),
+			CreateEntryPart(Iori, 21, 0),
+			CreateEntryPart(Natori, 22, 0),
+			CreateEntryPart(Pino, 23, 0),
 		}),
 	}
 
@@ -514,6 +541,43 @@ func getVideos(r jst.Range) []model.Video {
 			Source:   model.VideoSourceYoutube,
 			StartAt:  jst.Date(2020, 9, 24, 23, 0),
 			HashTags: []string{"Vのから騒ぎ"},
+		},
+		// 予定表にない誤って登録されたmildomの動画
+		{
+			ID:      "2020-10-5-0-37-chieri",
+			ActorID: Chieri.ID,
+			Source:  model.VideoSourceMildom,
+			StartAt: jst.Date(2020, 10, 5, 0, 37),
+		},
+		{
+			ID:      "2020-10-5-19-0-siro",
+			ActorID: Siro.ID,
+			Source:  model.VideoSourceBilibili,
+			StartAt: jst.Date(2020, 10, 5, 19, 0),
+		},
+		{
+			ID:      "2020-10-5-19-0-mememe",
+			ActorID: Mememe.ID,
+			Source:  model.VideoSourceMildom,
+			StartAt: jst.Date(2020, 10, 5, 19, 0),
+		},
+		{
+			ID:      "2020-10-5-21-0-iori",
+			ActorID: Iori.ID,
+			Source:  model.VideoSourceYoutube,
+			StartAt: jst.Date(2020, 10, 5, 21, 0),
+		},
+		{
+			ID:      "2020-10-5-22-0-natori",
+			ActorID: Natori.ID,
+			Source:  model.VideoSourceYoutube,
+			StartAt: jst.Date(2020, 10, 5, 22, 0),
+		},
+		{
+			ID:      "2020-10-5-23-0-pino",
+			ActorID: Pino.ID,
+			Source:  model.VideoSourceYoutube,
+			StartAt: jst.Date(2020, 10, 5, 23, 0),
 		},
 	}
 

@@ -219,6 +219,11 @@ func createScheduleInternal(date jst.Time, plans []model.Plan, videos []model.Vi
 			if plan.isNextPlanned(v) {
 				continue
 			}
+
+			// Youtube以外のゲリラ配信はない
+			if v.Source != model.VideoSourceYoutube {
+				continue
+			}
 		}
 
 		addScheduleEntry(peIndex, v)
