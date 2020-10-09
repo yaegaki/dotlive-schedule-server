@@ -94,6 +94,13 @@ func SaveVideo(ctx context.Context, c *firestore.Client, v model.Video, override
 				return nil
 			}
 
+			// 古い動画の配信者IDが分かっている場合かつ新しい動画の配信者IDが分からない場合は更新しない
+			// コラボ配信などで一人のチャンネルでしか配信しない場合、
+			// チャンネル主のツイートの動画を保存した方がいいため
+			if oldVideo.ActorID != model.ActorIDUnknown && v.ActorID == model.ActorIDUnknown {
+				return nil
+			}
+
 			temp.Notified = oldVideo.Notified
 			temp.RelatedActorIDs = createRelatedActorIDs(temp, oldVideo)
 		} else if status.Code(err) != codes.NotFound {
