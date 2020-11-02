@@ -46,7 +46,7 @@ func FindVideo(bilibiliURL string, actor model.Actor, tweetDate jst.Time) (model
 	var roomInfo struct {
 		Data struct {
 			RoomInfo struct {
-				UID int `json:"uid"`
+				UID uint64 `json:"uid"`
 			} `json:"room_info"`
 		} `json:"data"`
 	}
@@ -55,7 +55,12 @@ func FindVideo(bilibiliURL string, actor model.Actor, tweetDate jst.Time) (model
 		return model.Video{}, err
 	}
 
-	if strconv.Itoa(roomInfo.Data.RoomInfo.UID) != actor.BilibiliID {
+	actorBiibiliID, err := strconv.ParseUint(actor.BilibiliID, 10, 64)
+	if err != nil {
+		return model.Video{}, fmt.Errorf("invalid actor bilibiliID: %v", actor.BilibiliID)
+	}
+
+	if roomInfo.Data.RoomInfo.UID != actorBiibiliID {
 		return model.Video{}, common.ErrInvalidChannel
 	}
 
