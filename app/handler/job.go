@@ -170,7 +170,7 @@ func updateAwaiSenseiSchedule(ctx context.Context, api *anaconda.TwitterApi, cli
 
 		schedule = model.AwaiSenseiSchedule{
 			TweetID:  t.ID,
-			Title:    strings.Split(t.Text, "\n")[0],
+			Title:    getAwaiSenseiScheduleTitle(t.Text),
 			ImageURL: t.MediaURLs[0],
 		}
 
@@ -189,6 +189,21 @@ func updateAwaiSenseiSchedule(ctx context.Context, api *anaconda.TwitterApi, cli
 	if err != nil {
 		log.Printf("Can not save user: %v", err)
 	}
+}
+
+func getAwaiSenseiScheduleTitle(t string) string {
+	lines := strings.Split(t, "\n")
+	for _, line := range lines {
+		if strings.Contains(line, "どっとライブ予定表") {
+			return line
+		}
+
+		if strings.TrimSpace(line) == "" {
+			break
+		}
+	}
+
+	return lines[0]
 }
 
 func isAwaiSenseiScheduleTweet(t tweet.Tweet) bool {
