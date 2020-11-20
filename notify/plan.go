@@ -3,7 +3,9 @@ package notify
 import (
 	"context"
 	"fmt"
+	"strings"
 
+	"github.com/yaegaki/dotlive-schedule-server/jst"
 	"github.com/yaegaki/dotlive-schedule-server/model"
 )
 
@@ -11,7 +13,7 @@ import (
 func PushNotifyPlan(ctx context.Context, cli Client, p model.Plan, actors model.ActorSlice) error {
 	d := p.Date
 	topic := "plan"
-	title := fmt.Sprintf("生放送スケジュール%v月%v日", int(d.Month()), d.Day())
+	title := createTitle(d, p, actors)
 	body := p.Text
 	msg := createMessage(topic, title, body, map[string]string{
 		"date": fmt.Sprintf("%v-%v-%v", d.Year(), int(d.Month()), d.Day()),
@@ -19,4 +21,31 @@ func PushNotifyPlan(ctx context.Context, cli Client, p model.Plan, actors model.
 	_, err := cli.Send(ctx, msg)
 
 	return err
+}
+
+func createTitle(d jst.Time, p model.Plan, actors model.ActorSlice) string {
+	emojis := []string{}
+OUTER:
+	for _, e := range p.Entries {
+		actor, err := actors.FindActor(e.ActorID)
+		if err != nil {
+			continue
+		}
+
+		for _, emoji := range emojis {
+			if emoji == actor.Emoji {
+				continue OUTER
+			}
+		}
+		emojis = append(emojis, actor.Emoji)
+	}
+
+	var emojiStr string
+	if len(emojis) > 0 {
+		emojiStr = "(" + strings.Join(emojis, "") + ")"
+	} else {
+		emojiStr = ""
+	}
+
+	return fmt.Sprintf("生放送スケジュール%v月%v日%v", int(d.Month()), d.Day(), emojiStr)
 }
