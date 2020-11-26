@@ -148,6 +148,30 @@ http://vrlive.party/member/
 			},
 		},
 		{
+			"2020/10/27",
+			jst.ShortDate(2020, 11, 26),
+			// メンバー限定
+			`【生放送スケジュール11月27日】
+
+13:00~: #八重沢なとり
+19:00~: #はんぱない文化祭 (前夜祭)
+22:00~: #神楽すず
+23:00~: #カルロピノ (メンバーシップ限定)
+24:00~: #北上双葉
+
+メンバーの動画、SNSのリンクはこちらから！
+http://vrlive.party/member/
+
+#アイドル部　#どっとライブ`,
+			[]EntryPart{
+				CreateEntryPart(Natori, 13, 00),
+				CreateEntryPartCollaboHashTag(19, 00, "#はんぱない文化祭 (前夜祭)"),
+				CreateEntryPart(Suzu, 22, 00),
+				CreateEntryPartMemberOnly(Pino, 23, 00),
+				CreateEntryPart(Futaba, 24, 00),
+			},
+		},
+		{
 			"2099/4/19",
 			jst.ShortDate(2099, 4, 18),
 			`【どっとライブ】【アイドル部】
@@ -427,6 +451,10 @@ func comparePlan(t *testing.T, tweet Tweet, expect model.Plan) {
 
 		if e.CollaboID != expectEntry.CollaboID {
 			t.Errorf("invalid CollaboID, got: %v expect: %v", e.CollaboID, expectEntry.CollaboID)
+		}
+
+		if e.MemberOnly != expectEntry.MemberOnly {
+			t.Errorf("invalid MemberOnly, got: %v expect: %v", e.MemberOnly, expectEntry.MemberOnly)
 		}
 	}
 }

@@ -40,6 +40,8 @@ type PlanEntry struct {
 	StartAt jst.Time
 	// Source 配信サイト
 	Source string
+	// MemberOnly メンバー限定かどうか
+	MemberOnly bool
 	// CollaboID コラボの場合に識別するためのID
 	//           1以上の場合が有効な値
 	CollaboID int

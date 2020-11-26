@@ -32,6 +32,8 @@ type ScheduleEntry struct {
 	Planned bool `json:"planned"`
 	// IsLive 生放送かどうか
 	IsLive bool `json:"isLive"`
+	// MemberOnly メンバー限定かどうか
+	MemberOnly bool `json:"memberOnly"`
 	// Text 説明
 	Text string `json:"text"`
 	// CollaboID コラボID

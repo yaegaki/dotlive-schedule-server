@@ -29,6 +29,8 @@ type Video struct {
 	// IsLive 生放送かどうか
 	// プレミア公開もTrue
 	IsLive bool
+	// MemberOnly メンバー限定配信かどうか
+	MemberOnly bool
 	// Notified Push通知送信済みか
 	Notified bool
 	// StartAt 配信開始時刻

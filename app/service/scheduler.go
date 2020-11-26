@@ -181,17 +181,18 @@ func createScheduleInternal(date jst.Time, plans []model.Plan, videos []model.Vi
 		}
 
 		se := model.ScheduleEntry{
-			ActorName: actorName,
-			Note:      createNote(isPlanned, v.Source),
-			Icon:      icon,
-			StartAt:   startAt,
-			Planned:   isPlanned,
-			IsLive:    v.IsLive,
-			Text:      v.Text,
-			URL:       v.URL,
-			VideoID:   v.ID,
-			Source:    v.Source,
-			CollaboID: collaboID,
+			ActorName:  actorName,
+			Note:       createNote(isPlanned, v.MemberOnly, v.Source),
+			Icon:       icon,
+			StartAt:    startAt,
+			Planned:    isPlanned,
+			IsLive:     v.IsLive,
+			Text:       v.Text,
+			URL:        v.URL,
+			VideoID:    v.ID,
+			Source:     v.Source,
+			MemberOnly: v.MemberOnly,
+			CollaboID:  collaboID,
 		}
 		entries = append(entries, se)
 	}
@@ -259,7 +260,7 @@ LOOP_ENTRIES:
 			StartAt:   e.StartAt,
 			Planned:   true,
 			Source:    e.Source,
-			Note:      createNote(true, e.Source),
+			Note:      createNote(true, e.MemberOnly, e.Source),
 			CollaboID: e.CollaboID,
 		}
 
@@ -311,8 +312,12 @@ func findActorByID(actors []model.Actor, id string) (model.Actor, error) {
 	return model.Actor{}, common.ErrNotFound
 }
 
-func createNote(isPlanned bool, source string) string {
+func createNote(isPlanned bool, memberOnly bool, source string) string {
 	if source == model.VideoSourceYoutube {
+		if memberOnly {
+			return " (メン限)"
+		}
+
 		if isPlanned {
 			return ""
 		}

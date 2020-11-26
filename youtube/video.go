@@ -86,6 +86,9 @@ func FindVideo(ctx context.Context, s *y.Service, youtubeURL string, relatedActo
 		Source:    model.VideoSourceYoutube,
 		URL:       youtubeURL,
 		OwnerName: videoOwnerName,
+		// TODO: 動画からメン限かどうか取得する
+		//       (無理そう, status.privacyStatusがunlistedだったら大体メン限だが限定公開の可能性もある)
+		MemberOnly: false,
 	}
 
 	if isCollaboVideo {

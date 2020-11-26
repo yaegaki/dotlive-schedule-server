@@ -98,18 +98,21 @@ func ParsePlanTweet(t Tweet, actors model.ActorSlice, strict bool) (model.Plan, 
 				}
 
 				var source string
+				memberOnly := false
 				if strings.Contains(strings.ToLower(line), "bilibili") {
 					source = model.VideoSourceBilibili
 				} else if strings.Contains(strings.ToLower(line), "mildom") {
 					source = model.VideoSourceMildom
 				} else {
 					source = model.VideoSourceYoutube
+					memberOnly = strings.Contains(line, "メンバーシップ限定")
 				}
 
 				p.Entries = append(p.Entries, model.PlanEntry{
-					ActorID: actor.ID,
-					StartAt: startAt,
-					Source:  source,
+					ActorID:    actor.ID,
+					StartAt:    startAt,
+					Source:     source,
+					MemberOnly: memberOnly,
 				})
 
 				actorCount++

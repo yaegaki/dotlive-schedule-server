@@ -27,6 +27,8 @@ type video struct {
 	// IsLive 生放送かどうか
 	// プレミア公開もTrue
 	IsLive bool `firestore:"isLive"`
+	// MemberOnly メンバー限定配信かどうか
+	MemberOnly bool
 	// Notified Push通知送信済みか
 	Notified bool `firestore:"notified"`
 	// StartAt 配信開始時刻
@@ -190,6 +192,7 @@ func fromVideo(v model.Video) video {
 		URL:             v.URL,
 		Text:            v.Text,
 		IsLive:          v.IsLive,
+		MemberOnly:      v.MemberOnly,
 		Notified:        v.Notified,
 		StartAt:         v.StartAt.Time(),
 		RelatedActorID:  v.RelatedActorID,
@@ -207,6 +210,7 @@ func (v video) Video() model.Video {
 		URL:             v.URL,
 		Text:            v.Text,
 		IsLive:          v.IsLive,
+		MemberOnly:      v.MemberOnly,
 		Notified:        v.Notified,
 		StartAt:         jst.From(v.StartAt),
 		RelatedActorID:  v.RelatedActorID,
