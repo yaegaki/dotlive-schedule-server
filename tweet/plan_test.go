@@ -172,6 +172,22 @@ http://vrlive.party/member/
 			},
 		},
 		{
+			"2020/11/29",
+			jst.ShortDate(2020, 11, 28),
+			`【どっとライブ】【アイドル部】
+【生放送スケジュール11月29日】
+
+ 0:00~: #はんぱない文化祭
+
+メンバーの動画、SNSのリンクはこちらから！
+vrlive.party/member/
+
+#アイドル部　#どっとライブ`,
+			[]EntryPart{
+				CreateEntryPartCollaboHashTag(00, 00, "#はんぱない文化祭"),
+			},
+		},
+		{
 			"2099/4/19",
 			jst.ShortDate(2099, 4, 18),
 			`【どっとライブ】【アイドル部】

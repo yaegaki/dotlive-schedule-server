@@ -2,6 +2,7 @@ package tweet
 
 import (
 	"errors"
+	"strconv"
 	"strings"
 	"time"
 
@@ -18,10 +19,6 @@ const liveScheduleLayout = "【生放送スケジュール1月2日】"
 func ParsePlanTweet(t Tweet, actors model.ActorSlice, strict bool) (model.Plan, error) {
 	lines := strings.Split(t.Text, "\n")
 	state := 0
-
-	// 放送時間のフォーマット
-	// 24時などに対応するために時間部分にDayを使用する
-	const dateLayout = "2:04~:"
 
 	p := model.Plan{
 		SourceID: t.ID,
@@ -78,16 +75,11 @@ func ParsePlanTweet(t Tweet, actors model.ActorSlice, strict bool) (model.Plan, 
 				continue
 			}
 
-			t, err := time.Parse(dateLayout, strings.TrimSpace(l[0]))
+			timeStr := strings.TrimSpace(strings.Split(l[0], "~:")[0])
+			startAt, err := parseEntryTime(p.Date, timeStr)
 			if err != nil {
 				continue
 			}
-
-			// 24時以上対応のためにDay部分に時間が入っている
-			hour := t.Day()
-			minute := t.Minute()
-
-			startAt := jst.Date(p.Date.Year(), p.Date.Month(), p.Date.Day(), hour, minute)
 
 			actorCount := 0
 			prevEntryCount := len(p.Entries)
@@ -168,6 +160,27 @@ func ParsePlanTweet(t Tweet, actors model.ActorSlice, strict bool) (model.Plan, 
 	}
 
 	return p, nil
+}
+
+var errInvalidTimeFormat = errors.New("invalid time format")
+
+func parseEntryTime(base jst.Time, timeStr string) (jst.Time, error) {
+	xs := strings.Split(timeStr, ":")
+	if len(xs) != 2 {
+		return jst.Time{}, errInvalidTimeFormat
+	}
+
+	hour, err := strconv.Atoi(xs[0])
+	if err != nil || hour < 0 || hour > 47 {
+		return jst.Time{}, errInvalidTimeFormat
+	}
+
+	minute, err := strconv.Atoi(xs[1])
+	if err != nil || minute < 0 || minute > 59 {
+		return jst.Time{}, errInvalidTimeFormat
+	}
+
+	return jst.Date(base.Year(), base.Month(), base.Day(), hour, minute), nil
 }
 
 // FindPlans どっとライブのアカウントからPlanを取得する
