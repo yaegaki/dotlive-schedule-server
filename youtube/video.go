@@ -52,6 +52,7 @@ func FindVideo(ctx context.Context, s *y.Service, youtubeURL string, relatedActo
 	var item *y.Video
 	retry := 0
 	videoOwnerName := relatedActor.Name
+	isDotLiveChannel := false
 	for {
 		res, err := s.Videos.List("snippet,contentDetails,liveStreamingDetails").Id(videoID).Do()
 		if err != nil {
@@ -70,7 +71,10 @@ func FindVideo(ctx context.Context, s *y.Service, youtubeURL string, relatedActo
 
 		item = res.Items[0]
 		if item.Snippet.ChannelId != relatedActor.YoutubeChannelID {
-			if hasYoutubeChannelLink(item.Snippet.Description, relatedActor.YoutubeChannelID) {
+			if item.Snippet.ChannelId == ChannelIDDotLive {
+				isDotLiveChannel = true
+				videoOwnerName = ChannelNameDotLive
+			} else if hasYoutubeChannelLink(item.Snippet.Description, relatedActor.YoutubeChannelID) {
 				isCollaboVideo = true
 				videoOwnerName = item.Snippet.ChannelTitle
 			} else {
@@ -91,7 +95,9 @@ func FindVideo(ctx context.Context, s *y.Service, youtubeURL string, relatedActo
 		MemberOnly: false,
 	}
 
-	if isCollaboVideo {
+	if isDotLiveChannel {
+		v.ActorID = model.ActorIDUnknown
+	} else if isCollaboVideo {
 		v.ActorID = model.ActorIDUnknown
 		v.RelatedActorID = relatedActor.ID
 	} else {

@@ -4,7 +4,6 @@ import (
 	"github.com/yaegaki/dotlive-schedule-server/jst"
 )
 
-// VideoSource
 const (
 	// VideoSourceYoutube Youtubeソース
 	VideoSourceYoutube = "Youtube"

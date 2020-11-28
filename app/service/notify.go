@@ -10,6 +10,7 @@ import (
 	"github.com/yaegaki/dotlive-schedule-server/model"
 	"github.com/yaegaki/dotlive-schedule-server/notify"
 	"github.com/yaegaki/dotlive-schedule-server/store"
+	"github.com/yaegaki/dotlive-schedule-server/youtube"
 )
 
 // PushNotify プッシュ通知を実行する
@@ -138,6 +139,12 @@ func pushNotifyVideoInternal(ctx context.Context, msgCli notify.Client, plans []
 			continue
 		}
 
+		if v.OwnerName == youtube.ChannelNameDotLive {
+			// どっとライブの動画は誰が出演しているか取得できないので通知できない
+			log.Printf("Skip notify video because dotlive's video")
+			continue
+		}
+
 		// シロちゃんの動画は常に計画されているとする
 		const siroID = "lLhToxu1Kyxuwwygh0FK"
 		if v.ActorID == siroID && !v.IsLive {
@@ -152,7 +159,7 @@ func pushNotifyVideoInternal(ctx context.Context, msgCli notify.Client, plans []
 				}
 				actor, err := actors.FindActor(e.ActorID)
 				if err != nil {
-					log.Printf("Unknown actor %v", actor.ID)
+					log.Printf("Unknown actor %v", e.ActorID)
 					continue
 				}
 
@@ -167,7 +174,7 @@ func pushNotifyVideoInternal(ctx context.Context, msgCli notify.Client, plans []
 			}
 			actor, err := actors.FindActor(actorID)
 			if err != nil {
-				log.Printf("Unknown actor %v", actorID)
+				log.Printf("notify: Unknown actor %v", actorID)
 				continue
 			}
 
