@@ -14,7 +14,7 @@ func PushNotifyPlan(ctx context.Context, cli Client, p model.Plan, actors model.
 	d := p.Date
 	topic := "plan"
 	title := createTitle(d, p, actors)
-	body := p.Text
+	body := createBody(p.Text)
 	msg := createMessage(topic, title, body, map[string]string{
 		"date": fmt.Sprintf("%v-%v-%v", d.Year(), int(d.Month()), d.Day()),
 	})
@@ -48,4 +48,11 @@ OUTER:
 	}
 
 	return fmt.Sprintf("生放送スケジュール%v月%v日%v", int(d.Month()), d.Day(), emojiStr)
+}
+
+func createBody(text string) string {
+	if text == "" {
+		return "なし"
+	}
+	return text
 }

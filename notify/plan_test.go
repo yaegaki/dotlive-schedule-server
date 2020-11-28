@@ -88,7 +88,7 @@ func TestNotifyPlan(t *testing.T) {
 			jst.ShortDate(2099, 4, 1),
 			[]EntryPart{},
 			"生放送スケジュール4月1日",
-			"なし",
+			"",
 		},
 		{
 			jst.ShortDate(2099, 4, 2),
@@ -124,7 +124,12 @@ func TestNotifyPlan(t *testing.T) {
 				return
 			}
 
-			expect := createMessage("plan", tt.title, tt.body, map[string]string{
+			body := tt.body
+			if body == "" {
+				body = "なし"
+			}
+
+			expect := createMessage("plan", tt.title, body, map[string]string{
 				"date": fmt.Sprintf("%v-%v-%v", tt.date.Year(), int(tt.date.Month()), tt.date.Day()),
 			})
 			comparePlanMessage(t, cli.Messages[0], expect)
