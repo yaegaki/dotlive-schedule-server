@@ -188,6 +188,26 @@ vrlive.party/member/
 			},
 		},
 		{
+			"2020/12/15",
+			jst.ShortDate(2020, 12, 14),
+			`【どっとライブ】【アイドル部】
+【生放送スケジュール12月15日】
+
+13:00~: #八重沢なとり
+20:00~: #神楽すず
+23:00~: ＃Vのから騒ぎ
+
+メンバーの動画、SNSのリンクはこちらから！
+http://vrlive.party/member/
+
+#アイドル部　#どっとライブ`,
+			[]EntryPart{
+				CreateEntryPart(Natori, 13, 00),
+				CreateEntryPart(Suzu, 20, 00),
+				CreateEntryPartCollaboHashTag(23, 00, "#Vのから騒ぎ"),
+			},
+		},
+		{
 			"2099/4/19",
 			jst.ShortDate(2099, 4, 18),
 			`【どっとライブ】【アイドル部】

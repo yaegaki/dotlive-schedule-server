@@ -70,6 +70,7 @@ func ParsePlanTweet(t Tweet, actors model.ActorSlice, strict bool) (model.Plan, 
 			state = 1
 
 		case 1:
+			line = strings.Replace(line, "＃", "#", 1)
 			l := strings.Split(line, "#")
 			if len(l) == 1 {
 				continue
