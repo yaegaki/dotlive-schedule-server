@@ -193,6 +193,22 @@ func TestCreateScheduleInternal(t *testing.T) {
 				createScheduleEntryPart(Pino.Name, true, "2020-10-5-23-0-pino", 23, 0),
 			}),
 		},
+		{
+			"2020/12/15",
+			jst.Range{
+				Begin: jst.ShortDate(2020, 12, 14),
+				End:   jst.Date(2020, 12, 15, 23, 59),
+			},
+			jst.Range{
+				Begin: jst.ShortDate(2020, 12, 14),
+				End:   jst.Date(2020, 12, 15, 23, 59),
+			},
+			createScheduleForTest(jst.ShortDate(2020, 12, 15), []scheduleEntryPart{
+				createScheduleEntryPart(Natori.Name, true, "2020-12-15-13-0-natori", 13, 0),
+				createScheduleEntryPart(Suzu.Name, true, "2020-12-15-20-0-suzu", 20, 0),
+				createScheduleEntryPart("#Vのから騒ぎ", true, "2020-12-15-22-24-karasawagi", 23, 0),
+			}),
+		},
 	}
 
 	for _, tt := range tests {
@@ -365,6 +381,11 @@ func getPlans(r jst.Range) []model.Plan {
 			CreateEntryPart(Iori, 21, 0),
 			CreateEntryPart(Natori, 22, 0),
 			CreateEntryPart(Pino, 23, 0),
+		}),
+		CreatePlan(jst.ShortDate(2020, 12, 15), []EntryPart{
+			CreateEntryPart(Natori, 13, 0),
+			CreateEntryPart(Suzu, 20, 0),
+			CreateEntryPartHashTag("#Vのから騒ぎ", 23, 0),
 		}),
 	}
 
@@ -578,6 +599,25 @@ func getVideos(r jst.Range) []model.Video {
 			ActorID: Pino.ID,
 			Source:  model.VideoSourceYoutube,
 			StartAt: jst.Date(2020, 10, 5, 23, 0),
+		},
+		{
+			ID:      "2020-12-15-13-0-natori",
+			ActorID: Natori.ID,
+			Source:  model.VideoSourceYoutube,
+			StartAt: jst.Date(2020, 12, 15, 13, 0),
+		},
+		{
+			ID:      "2020-12-15-20-0-suzu",
+			ActorID: Suzu.ID,
+			Source:  model.VideoSourceYoutube,
+			StartAt: jst.Date(2020, 12, 15, 20, 0),
+		},
+		{
+			ID:       "2020-12-15-22-24-karasawagi",
+			ActorID:  model.ActorIDUnknown,
+			Source:   model.VideoSourceYoutube,
+			StartAt:  jst.Date(2020, 12, 15, 22, 24),
+			HashTags: []string{"Vのから騒ぎ"},
 		},
 	}
 

@@ -104,9 +104,9 @@ func (e PlanEntry) IsUnknownActor() bool {
 func (e PlanEntry) within(videoSource string, t jst.Time) bool {
 	var planRange jst.Range
 	if videoSource == VideoSourceYoutube {
-		// 計画から+-30分以内なら計画通りとする
+		// 計画から+30/-50分以内なら計画通りとする
 		planRange = jst.Range{
-			Begin: e.StartAt.Add(-30 * time.Minute),
+			Begin: e.StartAt.Add(-50 * time.Minute),
 			End:   e.StartAt.Add(30 * time.Minute),
 		}
 	} else {
