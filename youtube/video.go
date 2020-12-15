@@ -74,7 +74,7 @@ func FindVideo(ctx context.Context, s *y.Service, youtubeURL string, relatedActo
 			if item.Snippet.ChannelId == ChannelIDDotLive {
 				isDotLiveChannel = true
 				videoOwnerName = ChannelNameDotLive
-			} else if hasYoutubeChannelLink(item.Snippet.Description, relatedActor.YoutubeChannelID) {
+			} else if isActorRelatedVideo(item.Snippet.Description, relatedActor) {
 				isCollaboVideo = true
 				videoOwnerName = item.Snippet.ChannelTitle
 			} else {
@@ -152,6 +152,34 @@ func FindVideo(ctx context.Context, s *y.Service, youtubeURL string, relatedActo
 
 // hasYoutubeChannelLink 文字列中にyoutubeのチャンネルIDへのリンクが含まれているかどうか
 func hasYoutubeChannelLink(text string, channelID string) bool {
+	if channelID == "" {
+		return false
+	}
+
 	link := "https://www.youtube.com/channel/" + channelID
 	return strings.Index(text, link) >= 0
+}
+
+// hasYoutubeChannelName 文字列中にyoutubeのチャンネル名へのメンションが含まれているかどうか
+func hasYoutubeChannelMention(text string, channelName string) bool {
+	if channelName == "" {
+		return false
+	}
+
+	// NOTE: @チャンネル名でチャンネルへのリンクになる
+	mention := "@" + channelName
+	return strings.Index(text, mention) >= 0
+}
+
+// isActorRelatedVideo アクターに関連する動画かどうか
+func isActorRelatedVideo(desc string, actor model.Actor) bool {
+	if hasYoutubeChannelLink(desc, actor.YoutubeChannelID) {
+		return true
+	}
+
+	if hasYoutubeChannelMention(desc, actor.YoutubeChannelName) {
+		return true
+	}
+
+	return false
 }

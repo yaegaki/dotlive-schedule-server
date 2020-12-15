@@ -23,6 +23,8 @@ type Actor struct {
 	Emoji string
 	// YoutubeChannelID YoutubeのチャンネルID
 	YoutubeChannelID string
+	// YoutubeChannelID YoutubeのチャンネルID
+	YoutubeChannelName string
 	// BilibiliID BilibiliのID
 	BilibiliID string
 	// MildomID MildomのID

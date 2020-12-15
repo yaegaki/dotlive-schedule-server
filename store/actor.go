@@ -23,6 +23,8 @@ type actor struct {
 	Emoji string `firestore:"emoji"`
 	// YoutubeChannelID YoutubeのチャンネルID
 	YoutubeChannelID string `firestore:"youtubeChannelID"`
+	// YoutubeChannelID YoutubeのチャンネルID
+	YoutubeChannelName string `firestore:"youtubeChannelName"`
 	// BilibiliID BilibiliのID
 	BilibiliID string `firestore:"bilibiliID"`
 	// BilibiliID BilibiliのID
@@ -46,16 +48,17 @@ func FindActors(ctx context.Context, c *firestore.Client) (model.ActorSlice, err
 		doc.DataTo(&a)
 		a.id = doc.Ref.ID
 		actors = append(actors, model.Actor{
-			ID:                a.id,
-			Name:              a.Name,
-			Hashtag:           a.Hashtag,
-			Icon:              a.Icon,
-			TwitterScreenName: a.TwitterScreenName,
-			Emoji:             a.Emoji,
-			YoutubeChannelID:  a.YoutubeChannelID,
-			BilibiliID:        a.BilibiliID,
-			MildomID:          a.MildomID,
-			LastTweetID:       a.LastTweetID,
+			ID:                 a.id,
+			Name:               a.Name,
+			Hashtag:            a.Hashtag,
+			Icon:               a.Icon,
+			TwitterScreenName:  a.TwitterScreenName,
+			Emoji:              a.Emoji,
+			YoutubeChannelID:   a.YoutubeChannelID,
+			YoutubeChannelName: a.YoutubeChannelName,
+			BilibiliID:         a.BilibiliID,
+			MildomID:           a.MildomID,
+			LastTweetID:        a.LastTweetID,
 		})
 	}
 
@@ -66,15 +69,16 @@ func FindActors(ctx context.Context, c *firestore.Client) (model.ActorSlice, err
 func SaveActor(ctx context.Context, c *firestore.Client, a model.Actor) error {
 	// 常に上書きでいいのでトランザクションにしない
 	_, err := c.Collection(collectionNameActor).Doc(a.ID).Set(ctx, actor{
-		Name:              a.Name,
-		Hashtag:           a.Hashtag,
-		Icon:              a.Icon,
-		TwitterScreenName: a.TwitterScreenName,
-		Emoji:             a.Emoji,
-		YoutubeChannelID:  a.YoutubeChannelID,
-		BilibiliID:        a.BilibiliID,
-		MildomID:          a.MildomID,
-		LastTweetID:       a.LastTweetID,
+		Name:               a.Name,
+		Hashtag:            a.Hashtag,
+		Icon:               a.Icon,
+		TwitterScreenName:  a.TwitterScreenName,
+		Emoji:              a.Emoji,
+		YoutubeChannelID:   a.YoutubeChannelID,
+		YoutubeChannelName: a.YoutubeChannelName,
+		BilibiliID:         a.BilibiliID,
+		MildomID:           a.MildomID,
+		LastTweetID:        a.LastTweetID,
 	})
 	return err
 }
