@@ -82,7 +82,7 @@ func CreateEntryPartCollabo(actor model.Actor, hour, min int, collaboID int) Ent
 	}
 }
 
-// CreateEntryPartCollabo .
+// CreateEntryPartCollaboMildom .
 func CreateEntryPartCollaboMildom(actor model.Actor, hour, min int, collaboID int) EntryPart {
 	return EntryPart{
 		Actor:     actor,
