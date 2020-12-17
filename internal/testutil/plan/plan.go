@@ -82,6 +82,17 @@ func CreateEntryPartCollabo(actor model.Actor, hour, min int, collaboID int) Ent
 	}
 }
 
+// CreateEntryPartCollabo .
+func CreateEntryPartCollaboMildom(actor model.Actor, hour, min int, collaboID int) EntryPart {
+	return EntryPart{
+		Actor:     actor,
+		Hour:      hour,
+		Min:       min,
+		Source:    model.VideoSourceMildom,
+		CollaboID: collaboID,
+	}
+}
+
 // CreateEntryPartCollaboHashTag .
 func CreateEntryPartCollaboHashTag(hour, min int, hashTag string) EntryPart {
 	return EntryPart{

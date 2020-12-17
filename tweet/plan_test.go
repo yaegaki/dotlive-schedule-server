@@ -208,13 +208,35 @@ http://vrlive.party/member/
 			},
 		},
 		{
+			"2020/12/17(2)",
+			jst.ShortDate(2020, 12, 16),
+			// オリジナルは12月17日の後に②がついてる
+			`【どっとライブ】【アイドル部】
+【生放送スケジュール12月17日】
+
+20:00~: #シロ生放送
+21:00~: #神楽すず(Mildom) × #花京院ちえり(Mildom) × #ヤマトイオリ(Mildom) × #金剛いろは 
+
+メンバーの動画、SNSのリンクはこちらから！
+http://vrlive.party/member/
+
+#アイドル部　#どっとライブ`,
+			[]EntryPart{
+				CreateEntryPart(Siro, 20, 00),
+				CreateEntryPartCollaboMildom(Suzu, 21, 00, 1),
+				CreateEntryPartCollaboMildom(Chieri, 21, 00, 1),
+				CreateEntryPartCollaboMildom(Iori, 21, 00, 1),
+				CreateEntryPartCollabo(Iroha, 21, 00, 1),
+			},
+		},
+		{
 			"2099/4/19",
 			jst.ShortDate(2099, 4, 18),
 			`【どっとライブ】【アイドル部】
 【生放送スケジュール4月19日】
 
 20:00~: #花京院ちえり × #カルロピノ × #金剛いろは × #もこ田めめめ
-21:00~: #神楽すず x #ヤマトイオリ
+21:00~: #神楽すず × #ヤマトイオリ
 
 メンバーの動画、SNSのリンクはこちらから！
 http://vrlive.party/member/
@@ -261,7 +283,7 @@ http://vrlive.party/member/
 			Text: `【どっとライブ】【アイドル部】
 【生放送スケジュール4月19日】
 
-20:00~: #ヤマトイオリ x #hoge
+20:00~: #ヤマトイオリ × #hoge
 
 メンバーの動画、SNSのリンクはこちらから！
 http://vrlive.party/member/

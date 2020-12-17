@@ -86,19 +86,27 @@ func ParsePlanTweet(t Tweet, actors model.ActorSlice, strict bool) (model.Plan, 
 			prevEntryCount := len(p.Entries)
 
 			for _, actor := range actors {
-				if !strings.Contains(line, actor.Hashtag) {
+				actorIndex := strings.Index(line, actor.Hashtag)
+				if actorIndex < 0 {
 					continue
 				}
 
+				targetStr := line[actorIndex:]
+				collaboIndex := strings.Index(targetStr, "×")
+				if collaboIndex >= 0 {
+					targetStr = targetStr[:collaboIndex]
+				}
+				targetStr = strings.ToLower(targetStr)
+
 				var source string
 				memberOnly := false
-				if strings.Contains(strings.ToLower(line), "bilibili") {
+				if strings.Contains(targetStr, "bilibili") {
 					source = model.VideoSourceBilibili
-				} else if strings.Contains(strings.ToLower(line), "mildom") {
+				} else if strings.Contains(targetStr, "mildom") {
 					source = model.VideoSourceMildom
 				} else {
 					source = model.VideoSourceYoutube
-					memberOnly = strings.Contains(line, "メンバーシップ限定")
+					memberOnly = strings.Contains(targetStr, "メンバーシップ限定")
 				}
 
 				p.Entries = append(p.Entries, model.PlanEntry{
