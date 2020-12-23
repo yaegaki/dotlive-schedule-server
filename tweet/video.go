@@ -20,7 +20,7 @@ type VideoResolver interface {
 // ResolveVideos Twitterから動画情報を取得する
 func ResolveVideos(api *anaconda.TwitterApi, actors []model.Actor, r VideoResolver) {
 	for _, actor := range actors {
-		tl, err := getTimeline(api, actor.TwitterScreenName, actor.LastTweetID)
+		tl, err := getTimeline(api, actor.TwitterScreenName, actor.LastTweetID, "")
 		if err != nil {
 			log.Printf("Can not get tweet for %v: %v", actor.Name, err)
 			continue

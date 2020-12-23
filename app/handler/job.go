@@ -150,31 +150,54 @@ func updateAwaiSenseiSchedule(ctx context.Context, api *anaconda.TwitterApi, cli
 		return
 	}
 
-	tweets, err := tweet.GetTimeline(api, userAwaiSensei.ScreenName, userAwaiSensei.LastTweetID)
-	if err != nil {
-		log.Printf("Can not get timeline: %v", err)
-		return
-	}
-
-	if len(tweets) == 0 {
-		return
-	}
-
-	userAwaiSensei.LastTweetID = tweets[0].ID
-
+	const MaxTweetCount = 100
+	tweetCount := 0
+	maxID := ""
+	isFirst := true
+	currentLastID := userAwaiSensei.LastTweetID
 	var schedule model.AwaiSenseiSchedule
-	for _, t := range tweets {
-		if !isAwaiSenseiScheduleTweet(t) {
-			continue
+
+TWEET_GET_LOOP:
+	for tweetCount < MaxTweetCount {
+		tweets, err := tweet.GetTimelineWithMaxID(api, userAwaiSensei.ScreenName, currentLastID, maxID)
+		if err != nil {
+			log.Printf("Can not get timeline: %v", err)
+			return
 		}
 
-		schedule = model.AwaiSenseiSchedule{
-			TweetID:  t.ID,
-			Title:    getAwaiSenseiScheduleTitle(t.Text),
-			ImageURL: t.MediaURLs[0],
+		l := len(tweets)
+		if l == 0 {
+			break
 		}
 
-		break
+		if tweets[l-1].ID == maxID {
+			break
+		}
+
+		if isFirst {
+			isFirst = false
+			userAwaiSensei.LastTweetID = tweets[0].ID
+		}
+
+		for _, t := range tweets {
+			tweetCount++
+			if !isAwaiSenseiScheduleTweet(t) {
+				maxID = t.ID
+				continue
+			}
+
+			schedule = model.AwaiSenseiSchedule{
+				TweetID:  t.ID,
+				Title:    getAwaiSenseiScheduleTitle(t.Text),
+				ImageURL: t.MediaURLs[0],
+			}
+
+			break TWEET_GET_LOOP
+		}
+	}
+
+	if tweetCount >= MaxTweetCount {
+		log.Printf("TweetCount limit exceeded: %v", tweetCount)
 	}
 
 	if schedule.TweetID != "" {
@@ -185,9 +208,11 @@ func updateAwaiSenseiSchedule(ctx context.Context, api *anaconda.TwitterApi, cli
 		}
 	}
 
-	err = store.SaveTwitterUser(ctx, client, userAwaiSensei)
-	if err != nil {
-		log.Printf("Can not save user: %v", err)
+	if userAwaiSensei.LastTweetID != currentLastID {
+		err = store.SaveTwitterUser(ctx, client, userAwaiSensei)
+		if err != nil {
+			log.Printf("Can not save user: %v", err)
+		}
 	}
 }
 

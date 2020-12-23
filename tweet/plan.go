@@ -194,7 +194,7 @@ func parseEntryTime(base jst.Time, timeStr string) (jst.Time, error) {
 
 // FindPlans どっとライブのアカウントからPlanを取得する
 func FindPlans(api *anaconda.TwitterApi, user model.TwitterUser, actors []model.Actor) (model.TwitterUser, []model.Plan, error) {
-	timeline, err := getTimeline(api, user.ScreenName, user.LastTweetID)
+	timeline, err := getTimeline(api, user.ScreenName, user.LastTweetID, "")
 	if err != nil {
 		return model.TwitterUser{}, nil, xerrors.Errorf("Can not get timeline: %w", err)
 	}

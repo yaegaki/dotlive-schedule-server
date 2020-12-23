@@ -10,10 +10,15 @@ import (
 
 // GetTimeline タイムラインを取得する
 func GetTimeline(api *anaconda.TwitterApi, screenName, lastTweetID string) ([]Tweet, error) {
-	return getTimeline(api, screenName, lastTweetID)
+	return getTimeline(api, screenName, lastTweetID, "")
 }
 
-func getTimeline(api *anaconda.TwitterApi, screenName, lastTweetID string) ([]Tweet, error) {
+// GetTimelineWithMaxID タイムラインを取得する(MaxID以下のIDを持つツイートのみを対象にする)
+func GetTimelineWithMaxID(api *anaconda.TwitterApi, screenName, lastTweetID string, maxID string) ([]Tweet, error) {
+	return getTimeline(api, screenName, lastTweetID, maxID)
+}
+
+func getTimeline(api *anaconda.TwitterApi, screenName, lastTweetID string, maxID string) ([]Tweet, error) {
 	param := url.Values{
 		"screen_name":     []string{screenName},
 		"exclude_replies": []string{"false"},
@@ -21,6 +26,10 @@ func getTimeline(api *anaconda.TwitterApi, screenName, lastTweetID string) ([]Tw
 	}
 	if lastTweetID != "" {
 		param["since_id"] = []string{lastTweetID}
+	}
+
+	if maxID != "" {
+		param["max_id"] = []string{maxID}
 	}
 
 	timeline, err := api.GetUserTimeline(param)
