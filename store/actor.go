@@ -2,6 +2,7 @@ package store
 
 import (
 	"context"
+	"fmt"
 
 	"cloud.google.com/go/firestore"
 	"github.com/yaegaki/dotlive-schedule-server/model"
@@ -68,7 +69,23 @@ func FindActors(ctx context.Context, c *firestore.Client) (model.ActorSlice, err
 // SaveActor 配信者を保存する
 func SaveActor(ctx context.Context, c *firestore.Client, a model.Actor) error {
 	// 常に上書きでいいのでトランザクションにしない
-	_, err := c.Collection(collectionNameActor).Doc(a.ID).Set(ctx, actor{
+	_, err := c.Collection(collectionNameActor).Doc(a.ID).Set(ctx, fromActor(a))
+	return err
+}
+
+// CreateActor 配信者を新しく作成する
+func CreateActor(ctx context.Context, c *firestore.Client, a model.Actor) error {
+	if a.ID != "" {
+		return fmt.Errorf("actorID is not null: %v", a.ID)
+	}
+
+	docRef := c.Collection(collectionNameActor).NewDoc()
+	_, err := docRef.Set(ctx, fromActor(a))
+	return err
+}
+
+func fromActor(a model.Actor) actor {
+	return actor{
 		Name:               a.Name,
 		Hashtag:            a.Hashtag,
 		Icon:               a.Icon,
@@ -79,6 +96,5 @@ func SaveActor(ctx context.Context, c *firestore.Client, a model.Actor) error {
 		BilibiliID:         a.BilibiliID,
 		MildomID:           a.MildomID,
 		LastTweetID:        a.LastTweetID,
-	})
-	return err
+	}
 }
