@@ -11,6 +11,8 @@ import (
 type Plan struct {
 	// Date 計画の日付
 	Date jst.Time
+	// PlanTag 計画が分割されてるときの識別タグ
+	PlanTag string
 	// Source ソースとなるツイートID
 	SourceID string
 	// Entries 計画のエントリ
@@ -20,18 +22,27 @@ type Plan struct {
 	// Fixed 固定化されているか
 	// 固定化されている場合は定期ジョブによって更新されない
 	Fixed bool
-	// Text 計画ツイートの内容部分
+	// Texts 計画ツイートの内容の部分
 	// 計画を通知するときに使用する
+	Texts []PlanText
+}
+
+// PlanText 計画ツイートの通知用テキスト
+type PlanText struct {
+	// Date テキストの始めの時間
+	Date jst.Time
+	// PlanTag 計画が分割されてるときの識別タグ
+	PlanTag string
+	// Text テキスト
 	Text string
-	// Additional 追加の計画かどうか
-	// 追加の計画の場合は既存の計画を上書きせずに追加する
-	Additional bool
 }
 
 // PlanEntry 計画のエントリ
 type PlanEntry struct {
 	// ActorID 配信者ID
 	ActorID string
+	// PlanTag 計画が分割されてるときの識別タグ
+	PlanTag string
 	// HashTag コラボハッシュタグ
 	// 通常の配信の場合は空文字
 	// このフィールドが空文字ではない場合は必ずActorID == UnknownActorIDになる
@@ -121,4 +132,17 @@ func (e PlanEntry) within(videoSource string, t jst.Time) bool {
 	}
 
 	return planRange.In(t)
+}
+
+// Text 通知用のテキストを取得する
+func (p Plan) Text() string {
+	result := ""
+	for _, t := range p.Texts {
+		if result == "" {
+			result = t.Text
+		} else {
+			result = result + "\n" + t.Text
+		}
+	}
+	return result
 }

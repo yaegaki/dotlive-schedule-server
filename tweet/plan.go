@@ -22,11 +22,13 @@ func ParsePlanTweet(t Tweet, actors model.ActorSlice, strict bool) (model.Plan, 
 
 	p := model.Plan{
 		SourceID: t.ID,
+		PlanTag:  "",
 	}
 
 	tweetDate := t.Date
 
 	collaboID := 1
+	notifyText := ""
 
 	for _, line := range lines {
 		switch state {
@@ -37,16 +39,10 @@ func ParsePlanTweet(t Tweet, actors model.ActorSlice, strict bool) (model.Plan, 
 
 			// 計画が複数に分けてツイートされる場合、
 			// 日付の後に①などがついている
-			// パースするときに邪魔なので①の部分は消す
 			daySplits := strings.Split(line, "日")
 			if len(daySplits) > 1 {
-				// 複数に分かれている場合は常に追記
-				// TODO: 訂正かつ複数に分かれている場合、
-				// ずっと追記になってしまうのでどうにかする
-				if !strings.HasPrefix(daySplits[1], "】") {
-					p.Additional = true
-				}
-
+				// ①の部分を取得してPlanTagとする
+				p.PlanTag = strings.Split(daySplits[1], "】")[0]
 				line = daySplits[0] + "日】"
 			}
 
@@ -111,6 +107,7 @@ func ParsePlanTweet(t Tweet, actors model.ActorSlice, strict bool) (model.Plan, 
 
 				p.Entries = append(p.Entries, model.PlanEntry{
 					ActorID:    actor.ID,
+					PlanTag:    p.PlanTag,
 					StartAt:    startAt,
 					Source:     source,
 					MemberOnly: memberOnly,
@@ -133,6 +130,7 @@ func ParsePlanTweet(t Tweet, actors model.ActorSlice, strict bool) (model.Plan, 
 				// コラボやイベントなどの特殊なハッシュタグ
 				p.Entries = append(p.Entries, model.PlanEntry{
 					ActorID: model.ActorIDUnknown,
+					PlanTag: p.PlanTag,
 					HashTag: hashTag,
 					StartAt: startAt,
 					// とりあえずYoutubeにしておく
@@ -156,16 +154,30 @@ func ParsePlanTweet(t Tweet, actors model.ActorSlice, strict bool) (model.Plan, 
 				collaboID++
 			}
 
-			if p.Text == "" {
-				p.Text = line
+			if len(p.Entries) > 0 {
+				p.Texts = []model.PlanText{}
+			}
+
+			if notifyText == "" {
+				notifyText = line
 			} else {
-				p.Text = p.Text + "\n" + line
+				notifyText = notifyText + "\n" + line
 			}
 		}
 	}
 
 	if state == 0 {
 		return model.Plan{}, errors.New("this tweet is not a plan")
+	}
+
+	if notifyText != "" {
+		p.Texts = []model.PlanText{
+			{
+				Date:    p.Entries[0].StartAt,
+				PlanTag: p.PlanTag,
+				Text:    notifyText,
+			},
+		}
 	}
 
 	return p, nil

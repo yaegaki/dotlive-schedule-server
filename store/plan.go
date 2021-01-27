@@ -3,7 +3,6 @@ package store
 import (
 	"context"
 	"sort"
-	"strings"
 	"time"
 
 	"cloud.google.com/go/firestore"
@@ -15,6 +14,7 @@ import (
 )
 
 type planEntrySlice []planEntry
+type planTextSlice []planText
 
 // plan 配信スケジュール
 type plan struct {
@@ -28,6 +28,16 @@ type plan struct {
 	Notified bool `firestore:"notified"`
 	// Fixed 固定化されているかどうか
 	Fixed bool `firestore:"fixed"`
+	// Texts 計画ツイートの内容部分
+	// 計画を通知するときに使用する
+	Texts planTextSlice `firestore:"text"`
+}
+
+type planText struct {
+	// Date テキストの始めの時間
+	Date time.Time `firestore:"date"`
+	// PlanTag 計画が分割されてるときの識別タグ
+	PlanTag string `firestore:"planTag"`
 	// Text 計画ツイートの内容部分
 	// 計画を通知するときに使用する
 	Text string `firestore:"text"`
@@ -37,6 +47,8 @@ type plan struct {
 type planEntry struct {
 	// ActorID 配信者ID
 	ActorID string `firestore:"actorID"`
+	// PlanTag 計画が分割されてるときの識別タグ
+	PlanTag string `firestore:"planTag"`
 	// HashTag コラボハッシュタグ
 	HashTag string `firestore:"hashTag"`
 	// StartAt 配信開始時刻
@@ -100,7 +112,7 @@ func FindLatestPlan(ctx context.Context, c *firestore.Client) (model.Plan, error
 // Notifiedを更新する場合はMarkPlanAsNotifiedを使用する
 func SavePlan(ctx context.Context, c *firestore.Client, p model.Plan) error {
 	temp := fromPlan(p)
-	additional := p.Additional
+	planTag := p.PlanTag
 	fixed := false
 
 	err := c.RunTransaction(ctx, func(ctx context.Context, t *firestore.Transaction) error {
@@ -120,9 +132,7 @@ func SavePlan(ctx context.Context, c *firestore.Client, p model.Plan) error {
 				return nil
 			}
 			temp.Notified = oldPlan.Notified
-			if additional {
-				temp = oldPlan.Merge(temp)
-			}
+			temp = oldPlan.Merge(temp, planTag)
 			return t.Set(docs[0].Ref, temp)
 		}
 
@@ -201,11 +211,20 @@ func fromPlan(p model.Plan) plan {
 	for _, e := range p.Entries {
 		entries = append(entries, planEntry{
 			ActorID:    e.ActorID,
+			PlanTag:    e.PlanTag,
 			HashTag:    e.HashTag,
 			StartAt:    e.StartAt.Time(),
 			Source:     e.Source,
 			MemberOnly: e.MemberOnly,
 			CollaboID:  e.CollaboID,
+		})
+	}
+	var texts planTextSlice
+	for _, t := range p.Texts {
+		texts = append(texts, planText{
+			Date:    t.Date.Time(),
+			PlanTag: t.PlanTag,
+			Text:    t.Text,
 		})
 	}
 	return plan{
@@ -214,7 +233,7 @@ func fromPlan(p model.Plan) plan {
 		Notified: p.Notified,
 		SourceID: p.SourceID,
 		Fixed:    p.Fixed,
-		Text:     p.Text,
+		Texts:    texts,
 	}
 }
 
@@ -225,23 +244,18 @@ func (p plan) Plan() model.Plan {
 		Notified: p.Notified,
 		SourceID: p.SourceID,
 		Fixed:    p.Fixed,
-		Text:     p.Text,
+		Texts:    p.Texts.PlanTexts(),
 	}
 }
 
-func (p plan) Merge(other plan) plan {
+func (p plan) Merge(other plan, planTag string) plan {
+	newPlan := p.removeByPlanTag(planTag)
 	if len(other.Entries) == 0 {
-		return p
+		return newPlan
 	}
 
-	// other.Textがp.Textに完全に含まれている場合は既に追加されている
-	if strings.Index(p.Text, other.Text) >= 0 {
-		return p
-	}
-
-	newPlan := p
 	baseCollaboID := 0
-	for _, e := range p.Entries {
+	for _, e := range newPlan.Entries {
 		if e.CollaboID > baseCollaboID {
 			baseCollaboID = e.CollaboID
 		}
@@ -249,7 +263,7 @@ func (p plan) Merge(other plan) plan {
 
 OUTER:
 	for _, e := range other.Entries {
-		for _, existsEntries := range p.Entries {
+		for _, existsEntries := range newPlan.Entries {
 			if e.ActorID == existsEntries.ActorID && e.StartAt.Equal(existsEntries.StartAt) {
 				continue OUTER
 			}
@@ -274,15 +288,45 @@ OUTER:
 		return l.StartAt.Before(r.StartAt)
 	})
 
-	if len(p.Entries) == 0 {
-		newPlan.Text = other.Text
-	} else if p.Entries[0].StartAt.Before(other.Entries[0].StartAt) {
-		newPlan.Text = p.Text + "\n" + other.Text
-	} else {
-		newPlan.Text = other.Text + "\n" + p.Text
+	for _, t := range other.Texts {
+		newPlan.Texts = append(newPlan.Texts, t)
 	}
 
+	sort.Slice(newPlan.Texts, func(i, j int) bool {
+		l := newPlan.Texts[i]
+		r := newPlan.Texts[j]
+		if l.Date.Equal(r.Date) {
+			return false
+		}
+
+		return l.Date.Before(r.Date)
+	})
+
 	return newPlan
+}
+
+func (p plan) removeByPlanTag(planTag string) plan {
+	var entries []planEntry
+	for _, e := range p.Entries {
+		if e.PlanTag == planTag {
+			continue
+		}
+
+		entries = append(entries, e)
+	}
+
+	var texts []planText
+	for _, t := range p.Texts {
+		if t.PlanTag == planTag {
+			continue
+		}
+
+		texts = append(texts, t)
+	}
+
+	p.Entries = entries
+	p.Texts = texts
+	return p
 }
 
 func (es planEntrySlice) PlanEntries() []model.PlanEntry {
@@ -296,10 +340,27 @@ func (es planEntrySlice) PlanEntries() []model.PlanEntry {
 func (e planEntry) PlanEntry() model.PlanEntry {
 	return model.PlanEntry{
 		ActorID:    e.ActorID,
+		PlanTag:    e.PlanTag,
 		HashTag:    e.HashTag,
 		StartAt:    jst.From(e.StartAt),
 		Source:     e.Source,
 		MemberOnly: e.MemberOnly,
 		CollaboID:  e.CollaboID,
+	}
+}
+
+func (ts planTextSlice) PlanTexts() []model.PlanText {
+	var res []model.PlanText
+	for _, t := range ts {
+		res = append(res, t.PlanText())
+	}
+	return res
+}
+
+func (t planText) PlanText() model.PlanText {
+	return model.PlanText{
+		Date:    jst.From(t.Date),
+		PlanTag: t.PlanTag,
+		Text:    t.Text,
 	}
 }

@@ -272,7 +272,7 @@ http://vrlive.party/member/
 				ID:   "temp",
 				Date: tt.tweetDate,
 				Text: tt.tweet,
-			}, CreatePlan(tt.tweetDate.AddOneDay(), tt.parts))
+			}, CreatePlan(tt.tweetDate.AddOneDay(), tt.parts), false)
 		})
 	}
 
@@ -330,7 +330,7 @@ http://vrlive.party/member/
 			CreateEntryPart(Futaba, 23, 00),
 		}
 
-		comparePlan(t, tweet, CreatePlan(tweet.Date, parts))
+		comparePlan(t, tweet, CreatePlan(tweet.Date, parts), false)
 	})
 
 	t.Run("plan.Text", func(t *testing.T) {
@@ -365,7 +365,7 @@ http://vrlive.party/member/
 23:00~: #北上双葉
 25:00~: #hogehoge`
 
-		if p.Text != expect {
+		if p.Text() != expect {
 			t.Errorf("Invalid text: %v", err)
 		}
 	})
@@ -394,8 +394,8 @@ http://vrlive.party/member/
 			return
 		}
 
-		if p.Additional {
-			t.Fatal("must be not additional")
+		if p.PlanTag != "" {
+			t.Fatal("invalid plantag")
 		}
 
 		tweet = Tweet{
@@ -421,8 +421,14 @@ http://vrlive.party/member/
 			return
 		}
 
-		if !p.Additional {
-			t.Fatal("must be additional")
+		if p.PlanTag != "①" {
+			t.Fatalf("invalid plantag, got:%v expect:①", p.PlanTag)
+		}
+
+		for _, e := range p.Entries {
+			if e.PlanTag != "①" {
+				t.Fatalf("invalid plantag, got:%v expect:①", e.PlanTag)
+			}
 		}
 
 		tweet = Tweet{
@@ -447,13 +453,19 @@ http://vrlive.party/member/
 			return
 		}
 
-		if !p.Additional {
-			t.Fatal("must be additional")
+		if p.PlanTag != "②" {
+			t.Fatalf("invalid plantag, got:%v expect:②", p.PlanTag)
+		}
+
+		for _, e := range p.Entries {
+			if e.PlanTag != "②" {
+				t.Fatalf("invalid plantag, got:%v expect:②", e.PlanTag)
+			}
 		}
 	})
 }
 
-func comparePlan(t *testing.T, tweet Tweet, expect model.Plan) {
+func comparePlan(t *testing.T, tweet Tweet, expect model.Plan, testText bool) {
 	p, err := ParsePlanTweet(tweet, All, false)
 	if err != nil {
 		t.Errorf("Can not parse tweet: %v", err)
@@ -464,8 +476,8 @@ func comparePlan(t *testing.T, tweet Tweet, expect model.Plan) {
 		t.Errorf("invalid Date, got: %v expect: %v", p.Date, expect.Date)
 	}
 
-	if p.Additional != expect.Additional {
-		t.Errorf("invalid Additional, got: %v expect: %v", p.Additional, expect.Additional)
+	if p.PlanTag != expect.PlanTag {
+		t.Errorf("invalid PlanTag, got: %v expect: %v", p.PlanTag, expect.PlanTag)
 	}
 
 	if len(p.Entries) != len(expect.Entries) {
@@ -497,6 +509,11 @@ func comparePlan(t *testing.T, tweet Tweet, expect model.Plan) {
 			continue
 		}
 
+		if e.PlanTag != expectEntry.PlanTag {
+			t.Errorf("invalid PlanTag, got: %v expect: %v", e.PlanTag, expectEntry.PlanTag)
+			continue
+		}
+
 		if !e.StartAt.Equal(expectEntry.StartAt) {
 			t.Errorf("invalid StartAt, got: %v expect: %v", e.StartAt, expectEntry.StartAt)
 			continue
@@ -513,6 +530,31 @@ func comparePlan(t *testing.T, tweet Tweet, expect model.Plan) {
 
 		if e.MemberOnly != expectEntry.MemberOnly {
 			t.Errorf("invalid MemberOnly, got: %v expect: %v", e.MemberOnly, expectEntry.MemberOnly)
+		}
+	}
+
+	if testText {
+		if len(p.Texts) != len(expect.Texts) {
+			t.Errorf("different text, got: %v expect: %v", len(p.Texts), len(expect.Texts))
+			return
+		}
+
+		for i, text := range p.Texts {
+			expectText := expect.Texts[i]
+			if !text.Date.Equal(expectText.Date) {
+				t.Errorf("invalid Text.Date, got: %v expect: %v", text.Date, expectText.Date)
+				continue
+			}
+
+			if text.PlanTag != expectText.PlanTag {
+				t.Errorf("invalid Text.PlanTag, got: %v expect: %v", text.PlanTag, expectText.PlanTag)
+				continue
+			}
+
+			if text.Text != expectText.Text {
+				t.Errorf("invalid Text.Text, got: %v expect: %v", text.Text, expectText.Text)
+				continue
+			}
 		}
 	}
 }

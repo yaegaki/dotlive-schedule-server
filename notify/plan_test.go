@@ -10,6 +10,7 @@ import (
 	. "github.com/yaegaki/dotlive-schedule-server/internal/testutil/notify"
 	. "github.com/yaegaki/dotlive-schedule-server/internal/testutil/plan"
 	"github.com/yaegaki/dotlive-schedule-server/jst"
+	"github.com/yaegaki/dotlive-schedule-server/model"
 )
 
 func comparePlanMessage(t *testing.T, got *messaging.Message, expect *messaging.Message) (string, error) {
@@ -117,7 +118,13 @@ func TestNotifyPlan(t *testing.T) {
 			cli := &TestNotifyClient{}
 
 			p := CreatePlan(tt.date, tt.parts)
-			p.Text = tt.body
+			p.Texts = []model.PlanText{
+				{
+					Date:    jst.ShortDate(2021, 1, 1),
+					PlanTag: "",
+					Text:    tt.body,
+				},
+			}
 			PushNotifyPlan(ctx, cli, p, All)
 			if len(cli.Messages) != 1 {
 				t.Errorf("inavalid len(cli.Messages), got: %v", len(cli.Messages))

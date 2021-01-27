@@ -14,7 +14,7 @@ func PushNotifyPlan(ctx context.Context, cli Client, p model.Plan, actors model.
 	d := p.Date
 	topic := "plan"
 	title := createTitle(d, p, actors)
-	body := createBody(p.Text)
+	body := createBody(p.Text())
 	msg := createMessage(topic, title, body, map[string]string{
 		"date": fmt.Sprintf("%v-%v-%v", d.Year(), int(d.Month()), d.Day()),
 	})
