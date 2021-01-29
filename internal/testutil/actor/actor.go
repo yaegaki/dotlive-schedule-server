@@ -94,6 +94,33 @@ var Milk = model.Actor{
 	Emoji:             "🐑",
 }
 
+// Rururica .
+var Rururica = model.Actor{
+	ID:                "rururica",
+	Hashtag:           "#ルルンルーム",
+	Name:              "ルルン•ルルリカ",
+	TwitterScreenName: "test-rururica",
+	Emoji:             "🍖🐾",
+}
+
+// Milily .
+var Milily = model.Actor{
+	ID:                "milily",
+	Hashtag:           "#ななみりライブ",
+	Name:              "七星みりり",
+	TwitterScreenName: "test-milily",
+	Emoji:             "💥💫",
+}
+
+// Rikumu .
+var Rikumu = model.Actor{
+	ID:                "rikumu",
+	Hashtag:           "#リクム",
+	Name:              "リクム",
+	TwitterScreenName: "test-rikumu",
+	Emoji:             "🌃🎩",
+}
+
 // All .
 var All = []model.Actor{
 	Iori,
@@ -106,4 +133,7 @@ var All = []model.Actor{
 	Mememe,
 	Siro,
 	Milk,
+	Rururica,
+	Milily,
+	Rikumu,
 }
