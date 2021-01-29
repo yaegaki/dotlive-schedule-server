@@ -230,6 +230,29 @@ http://vrlive.party/member/
 			},
 		},
 		{
+			"2021/1/29(2)",
+			jst.ShortDate(2021, 1, 28),
+			// オリジナルは1月29日の後に②がついてる
+			`【どっとライブ】【アイドル部】
+【生放送スケジュール1月29日】
+
+21:00~: #八重沢なとり
+22:00~: #北上双葉(Mildom)
+23:00~: #ルルンルーム
+24:00~: #カルロピノ(メン限)
+
+メンバーの動画、SNSのリンクはこちらから！
+http://vrlive.party/member/
+
+#アイドル部　#どっとライブ`,
+			[]EntryPart{
+				CreateEntryPart(Natori, 21, 00),
+				CreateEntryPartMildom(Futaba, 22, 00),
+				CreateEntryPart(Rururica, 23, 00),
+				CreateEntryPartMemberOnly(Pino, 24, 00),
+			},
+		},
+		{
 			"2099/4/19",
 			jst.ShortDate(2099, 4, 18),
 			`【どっとライブ】【アイドル部】

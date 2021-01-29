@@ -102,7 +102,7 @@ func ParsePlanTweet(t Tweet, actors model.ActorSlice, strict bool) (model.Plan, 
 					source = model.VideoSourceMildom
 				} else {
 					source = model.VideoSourceYoutube
-					memberOnly = strings.Contains(targetStr, "メンバーシップ限定")
+					memberOnly = isMemberOnly(targetStr)
 				}
 
 				p.Entries = append(p.Entries, model.PlanEntry{
@@ -225,4 +225,8 @@ func FindPlans(api *anaconda.TwitterApi, user model.TwitterUser, actors []model.
 	}
 
 	return user, plans, nil
+}
+
+func isMemberOnly(str string) bool {
+	return strings.Contains(str, "メンバーシップ限定") || strings.Contains(str, "メン限")
 }
