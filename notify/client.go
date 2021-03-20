@@ -3,7 +3,7 @@ package notify
 import (
 	"context"
 	"crypto/tls"
-	"errors"
+	"fmt"
 	"log"
 	"net/http"
 	"net/http/httputil"
@@ -116,9 +116,9 @@ func (t *rt) RoundTrip(r *http.Request) (*http.Response, error) {
 		return resp, err
 	}
 
-	// ServiceUnavailableならリトライさせない
-	if resp.StatusCode == http.StatusServiceUnavailable {
-		t.err = errors.New("ServiceUnavailable")
+	// 500番以上のエラーの場合はリトライしない
+	if resp.StatusCode >= http.StatusInternalServerError {
+		t.err = fmt.Errorf("ServerError:%s", resp.Status)
 		return nil, t.err
 	}
 
