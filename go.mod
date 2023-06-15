@@ -1,6 +1,6 @@
 module github.com/yaegaki/dotlive-schedule-server
 
-go 1.12
+go 1.16
 
 require (
 	cloud.google.com/go/firestore v1.1.1
