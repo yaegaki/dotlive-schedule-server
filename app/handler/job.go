@@ -232,7 +232,7 @@ func getAwaiSenseiScheduleTitle(t string) string {
 }
 
 func isDotLiveScheduleText(t string) bool {
-	// "どっとライブ", "予定表"の両方が含まれている場合にtrueいんある
+	// "どっとライブ", "予定表"の両方が含まれている場合にtrueになる
 	if strings.Index(t, "どっとライブ") < 0 {
 		return false
 	}
