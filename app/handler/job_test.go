@@ -28,12 +28,16 @@ func TestIsDotLiveScheduleText(t *testing.T) {
 			true,
 		},
 		{
+			"アップランド予定表",
+			true,
+		},
+		{
 			"どっとライブ",
 			false,
 		},
 		{
 			"予定表",
-			false,
+			true,
 		},
 		{
 			"ほげほげ",

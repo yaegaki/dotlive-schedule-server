@@ -232,11 +232,7 @@ func getAwaiSenseiScheduleTitle(t string) string {
 }
 
 func isDotLiveScheduleText(t string) bool {
-	// "どっとライブ", "予定表"の両方が含まれている場合にtrueになる
-	if strings.Index(t, "どっとライブ") < 0 {
-		return false
-	}
-
+	// "予定表"が含まれない場合
 	if strings.Index(t, "予定表") < 0 {
 		return false
 	}
@@ -257,7 +253,7 @@ func isAwaiSenseiScheduleTweet(t tweet.Tweet) bool {
 	}
 
 	// ハッシュタグがない場合は以下の条件で判定する
-	// 1. 1行目に"どっとライブ"と"予定表"が含まれる
+	// 1. 1行目に予定表の文字列が含まれる
 	// 2. 2行目が空白
 
 	lines := strings.Split(t.Text, "\n")
